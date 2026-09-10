@@ -73,7 +73,7 @@ export function ChapterPage() {
   const official = officialFor(id);
 
   return (
-    <article className="mx-auto max-w-5xl">
+    <article>
       <Link
         to="/academy/subject/$subject"
         params={{ subject: meta.subject }}

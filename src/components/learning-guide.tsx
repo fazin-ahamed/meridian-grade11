@@ -1,10 +1,8 @@
 import { BookOpenCheck, Check, ChevronLeft, ChevronRight, Eye, ListTree, RotateCcw, Sparkles, Target } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Figure } from "@/components/diagrams";
-import { useRegisterChapterSidebar } from "@/components/layout/shell-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { clampLessonStep, moveLessonStep } from "@/components/learning-navigation";
 import type { ChapterContent } from "@/data/types";
 import type { ChapterMeta } from "@/data/types";
 import type { Grade11Guide } from "@/data/learning";
@@ -38,9 +36,9 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
   const [picked, setPicked] = useState<number | null>(null);
   const [showTopicAnswer, setShowTopicAnswer] = useState(false);
   const [topicPicked, setTopicPicked] = useState<number | null>(null);
-  const current = topics[clampLessonStep(step, topics.length)]!;
+  const current = topics[Math.min(step, topics.length - 1)]!;
   const firstQuestion = content.quiz[0];
-  const complete = topics.length > 0 && step === topics.length - 1;
+  const complete = step === topics.length - 1;
 
   useEffect(() => {
     setMode("guided");
@@ -51,30 +49,17 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
     setTopicPicked(null);
   }, [meta.id]);
 
-  const selectStep = useCallback((next: number) => {
-    setStep(clampLessonStep(next, topics.length));
+  function selectStep(next: number) {
+    setStep(Math.min(Math.max(next, 0), topics.length - 1));
     setShowAnswer(false);
     setPicked(null);
     setShowTopicAnswer(false);
     setTopicPicked(null);
-  }, [topics.length]);
-
-  const sidebarRegistration = useMemo(
-    () => ({
-      subject: meta.subject === "maths" ? "Mathematics" : meta.subject[0]!.toUpperCase() + meta.subject.slice(1),
-      chapterTitle: meta.title,
-      topics: topics.map((topic) => topic.title),
-      activeTopic: step,
-      onSelectTopic: selectStep,
-    }),
-    [meta.subject, meta.title, selectStep, step, topics],
-  );
-
-  useRegisterChapterSidebar(sidebarRegistration);
+  }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10">
-      <section className="rounded-3xl border border-border bg-surface p-6 md:p-8">
+    <div className="space-y-8">
+      <section className="rounded-2xl border border-border bg-surface p-5 md:p-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-2xl">
             <p className="text-xs font-medium tracking-[0.16em] text-subtle uppercase">Start with the model</p>
@@ -86,11 +71,11 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
           </Badge>
         </div>
 
-        <div className="mt-7 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
-          <InfoCard label="Before you begin" text={guide.bridge} />
-          <InfoCard label="How to represent it" text={guide.representation} />
-          <InfoCard label="Your lab mission" text={guide.labMission} />
-        </div>
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <InfoCard label="Before you begin" text={guide.bridge} />
+            <InfoCard label="How to represent it" text={guide.representation} />
+            <InfoCard label="Your lab mission" text={guide.labMission} />
+          </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm text-muted">
           <span className="inline-flex items-center gap-2 font-medium text-fg"><Target className="size-4 text-accent" /> {topics.length} teachable topics</span>
@@ -106,7 +91,6 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
             <div className="flex rounded-lg border border-border bg-surface p-1" role="group" aria-label="Theory view">
               <button
                 type="button"
-                aria-pressed={mode === "guided"}
                 className={cn("min-h-10 rounded-md px-3 text-sm", mode === "guided" ? "bg-accent text-accent-fg" : "text-muted hover:text-fg")}
                 onClick={() => setMode("guided")}
               >
@@ -114,7 +98,6 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
               </button>
               <button
                 type="button"
-                aria-pressed={mode === "outline"}
                 className={cn("min-h-10 rounded-md px-3 text-sm", mode === "outline" ? "bg-accent text-accent-fg" : "text-muted hover:text-fg")}
                 onClick={() => setMode("outline")}
               >
@@ -135,22 +118,55 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
         </div>
       </section>
 
-      <section className="min-w-0">
-        {mode === "guided" ? (
-          <TeachingTopicBlock
-            topic={current}
-            index={step}
-            total={topics.length}
-            picked={topicPicked}
-            showAnswer={showTopicAnswer}
-            onPick={setTopicPicked}
-            onReveal={() => setShowTopicAnswer(true)}
-            onPrevious={() => selectStep(moveLessonStep(step, topics.length, -1))}
-            onNext={() => selectStep(moveLessonStep(step, topics.length, 1))}
-          />
-        ) : (
-          <OutlineBlocks topics={topics} active={step} onSelect={selectStep} />
-        )}
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
+        <aside className="rounded-2xl border border-border bg-surface p-4 md:p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">Chapter route</p>
+            <h3 className="font-display mt-1 text-xl">Small steps, one idea at a time</h3>
+          </div>
+            <span className="font-mono text-xs tabular-nums text-subtle">{step + 1}/{topics.length}</span>
+          </div>
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-raised" aria-label="Lesson progress">
+            <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: `${((step + 1) / topics.length) * 100}%` }} />
+          </div>
+          <nav className="mt-5 space-y-1" aria-label="Topic steps">
+            {topics.map((topic, i) => (
+              <button
+                key={topic.id}
+                type="button"
+                onClick={() => selectStep(i)}
+                className={cn(
+                  "flex min-h-11 w-full items-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                  i === step ? "bg-raised text-fg" : "text-muted hover:bg-raised/70 hover:text-fg",
+                )}
+              >
+                <span className={cn("mt-0.5 font-mono text-xs tabular-nums", i === step ? "text-fg" : "text-subtle")}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="line-clamp-2">{topic.title}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <div className="min-w-0">
+          {mode === "guided" ? (
+            <TeachingTopicBlock
+              topic={current}
+              index={step}
+              total={topics.length}
+              picked={topicPicked}
+              showAnswer={showTopicAnswer}
+              onPick={setTopicPicked}
+              onReveal={() => setShowTopicAnswer(true)}
+              onPrevious={() => selectStep(step - 1)}
+              onNext={() => selectStep(step + 1)}
+            />
+          ) : (
+            <OutlineBlocks topics={topics} active={step} onSelect={selectStep} />
+          )}
+        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
@@ -208,7 +224,7 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
 
 function InfoCard({ label, text }: { label: string; text: string }) {
   return (
-    <div className="bg-raised/70 p-4 md:p-5">
+    <div className="rounded-xl border border-border bg-raised/60 p-4">
       <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">{label}</p>
       <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
     </div>
@@ -237,7 +253,7 @@ function TeachingTopicBlock({
   onNext: () => void;
 }) {
   return (
-    <article className="rounded-3xl border border-border bg-surface p-6 md:p-9">
+    <article className="rounded-2xl border border-border bg-surface p-5 md:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Badge variant="outline">Topic {index + 1} of {total}</Badge>
         <span className="inline-flex items-center gap-2 text-xs text-subtle"><Sparkles className="size-3.5" /> Learn → use → retrieve</span>
@@ -377,11 +393,11 @@ function TeachingTopicBlock({
       )}
 
       <div className="mt-6 flex flex-wrap justify-between gap-2">
-        <Button type="button" variant="outline" onClick={onPrevious} disabled={index === 0}>
+        <Button variant="outline" onClick={onPrevious} disabled={index === 0}>
           <ChevronLeft className="size-4" /> Previous topic
         </Button>
-        <Button type="button" onClick={onNext} disabled={index === total - 1}>
-          {index === total - 1 ? "Chapter check below" : "Next topic"} <ChevronRight className="size-4" />
+        <Button onClick={onNext} disabled={index === total - 1}>
+          {index === total - 1 ? "Chapter check" : "Next topic"} <ChevronRight className="size-4" />
         </Button>
       </div>
     </article>
@@ -452,7 +468,6 @@ function OutlineBlocks({ topics, active, onSelect }: { topics: TeachingTopic[]; 
           key={topic.id}
           type="button"
           onClick={() => onSelect(index)}
-          aria-pressed={index === active}
           className={cn("flex min-h-16 w-full items-center justify-between gap-4 rounded-xl border px-4 py-3 text-left", index === active ? "border-accent bg-raised" : "border-border bg-surface hover:bg-raised")}
         >
           <span>
