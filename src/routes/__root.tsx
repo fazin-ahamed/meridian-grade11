@@ -1,0 +1,49 @@
+import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { AuthProvider } from "@/lib/auth/provider";
+import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import appCss from "../styles.css?url";
+
+const APP_NAME = "Meridian — JEE Mastery Atlas";
+const publicBase = import.meta.env.BASE_URL;
+
+export const Route = createRootRoute({
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: APP_NAME },
+      {
+        name: "description",
+        content:
+          "Class 11–12 PCM for boards, JEE Main and Advanced — notes, diagrams, a two-year method, and thousands of mill questions.",
+      },
+      { name: "theme-color", content: "#0b0c0e" },
+    ],
+    links: [
+      { rel: "icon", type: "image/svg+xml", href: `${publicBase}favicon.svg` },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&display=swap",
+      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: `${publicBase}__grok/manifest.webmanifest` },
+      { rel: "apple-touch-icon", href: `${publicBase}__grok/icon-180.png` },
+    ],
+  }),
+  component: () => (
+    <html lang="en" className="antialiased" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+      </head>
+      <body className="bg-bg text-fg">
+        <PreviewHostBridge />
+        <AuthProvider>
+          <Outlet />
+        </AuthProvider>
+        <Scripts />
+      </body>
+    </html>
+  ),
+});

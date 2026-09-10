@@ -1,0 +1,70 @@
+export const EXAM_LAB = {
+  main: {
+    title: "JEE Main 2026 — Paper 1 (B.E./B.Tech.)",
+    body: "Conducted by NTA in two sessions. Paper 1 is the engineering paper this atlas is built for. The syllabus is the October 2025 NTA document — Class 11–12 PCM with the post-2024 deletions still in force.",
+    pattern: [
+      { k: "Duration", v: "3 hours (4 hours for PwD with scribe rules as notified)" },
+      { k: "Subjects", v: "Physics, Chemistry, Mathematics — all compulsory" },
+      { k: "Section A", v: "20 MCQs per subject (all compulsory)" },
+      { k: "Section B", v: "5 numerical-value questions per subject (all compulsory; no internal choice)" },
+      { k: "Total", v: "75 questions · 300 marks" },
+      { k: "MCQ marking", v: "+4 / −1 / 0" },
+      { k: "Numerical marking", v: "+4 / 0 (no negative). Answer as integer or up to the notified decimal rule." },
+      { k: "Mode", v: "Computer-based. Official mock on the NTA practice portal is not optional." },
+    ],
+    tactics: [
+      "Chemistry in 40 minutes is the percentile floor. NCERT lines, not coaching PDFs, win Main inorganic.",
+      "Never open with a long rotation or a conic if your pulse is high. Start with the subject you currently mock-score highest in.",
+      "Section B numericals: write the unit-free number the machine wants. Rounding to the scheme in the instruction page, not to ‘two decimals always’.",
+      "99 percentile is typically ~180–200 in recent years — it moves. Train for 220 so a hard shift still lands 98+.",
+      "Mark-for-review is not a plan. A 15-minute endgame: only questions you already have an approach for.",
+    ],
+  },
+  advanced: {
+    title: "JEE Advanced 2026",
+    body: "Organised by IIT Roorkee. Two papers, both compulsory, 3 hours each, on one day. The syllabus PDF is explicit: several Main-deleted chapters (solid state, surface, s-block, hydrogen, qualitative analysis, gases) are alive here. Pattern is not fixed — multi-correct, single-correct, numerical, matching, paragraph all appear.",
+    pattern: [
+      { k: "Papers", v: "Paper 1 and Paper 2, both 3 h, both compulsory" },
+      { k: "Marking", v: "Varies by paragraph. Partial marks on some multi-correct; devastating negatives on others. Read the code on page 1 of the paper." },
+      { k: "Qualifying", v: "Subject-wise minimum + aggregate. Rank is on aggregate of both papers." },
+      { k: "Date (2026)", v: "Sunday 17 May 2026 (as notified by IIT Roorkee)" },
+    ],
+    tactics: [
+      "Multi-correct: the last option you ‘kind of like’ is usually the rank-killer. Tick only what you can defend in one sentence.",
+      "Paragraph questions share a physical setup. Spend 90 seconds drawing it once; the three questions then take two minutes each.",
+      "Integer-answer: dimensional check + limiting cases (m→0, θ→0, R→∞) catch 30% of arithmetic.",
+      "Paper 2 is a different exam if you spent Paper 1’s adrenaline badly. Eat, walk, no solution-discussion in the gap.",
+      "Advanced rewards mix-chapter thinking: a rotation + SHM, a GOC + carbonyl, a conic + vector. Drill mixed, not siloed.",
+    ],
+  },
+  boards: {
+    title: "CBSE Class 11 & 12 PCM",
+    body: "Boards are a different scoring function: derivations, definitions, and NCERT-faithful numericals. A 95 in Physics XII is mostly writable proofs (Gauss, lens maker, SHM energy, Biot–Savart) plus clean arithmetic. JEE speed-solving is not a substitute for a derivation written in the official language.",
+    pattern: [
+      { k: "Theory paper", v: "Typically 70 marks; practical 30. Confirm the year’s sample paper." },
+      { k: "Internal choice", v: "Present in most sections — pick the derivation you can finish, not the ‘harder-looking’ one." },
+      { k: "Deleted vs JEE", v: "Linear programming is boards-only. Several Advanced-only chemistry chapters are gone from CBSE too. This atlas tags both." },
+    ],
+    tactics: [
+      "Write every derivation once a week from a blank page. If you cannot, you do not know it.",
+      "Exemplar + NCERT exercises cover almost the entire numerical diet.",
+      "Inorganic: NCERT tables and exceptions, not random PDFs.",
+      "Time a 3-hour sample paper every weekend from 45 days out. Presentation marks are real.",
+    ],
+  },
+  percentiles: [
+    { band: "90%ile Main", score: "~90–110 / 300 (shift-dependent)", meaning: "NITs in less competitive branches / home-state. Not Advanced-safe." },
+    { band: "95%ile Main", score: "~130–150", meaning: "Decent NIT/IIIT range. Advanced possible but not comfortable." },
+    { band: "98%ile Main", score: "~160–180", meaning: "Top NIT branches in play. Advanced should be the real target." },
+    { band: "99%ile Main", score: "~180–210", meaning: "Old-IIT-or-bust territory for many. Start Advanced pattern immediately." },
+    { band: "99.5%ile+", score: "~220+", meaning: "Main is done. Every remaining hour is Advanced + error-type work." },
+    { band: "Adv rank ~5k", score: "Highly paper-dependent", meaning: "Newer IIT branches / older IIT less-preferred. Still a life-changing rank." },
+    { band: "Adv rank ~500", score: "Top ~0.3% of Advanced sitters", meaning: "CSE/EE conversation at older IITs. Requires mock analysis, not more books." },
+  ],
+  weekRhythm: [
+    { name: "Four-subject lie", text: "You do not need PCM + extra every day. Two heavy + one light beats three mediocre." },
+    { name: "The 40/40/20 block", text: "40% new or weak chapter, 40% mixed PYQ, 20% revision of a finished chapter. Protect the 20%." },
+    { name: "Error book rule", text: "If a mistake is not written in one line with the correct idea, it will recur on the real day." },
+    { name: "Sleep as a subject", text: "A 6-hour night before a mock lies to you about your rank. Train at the sleep you will have in May." },
+  ],
+};
