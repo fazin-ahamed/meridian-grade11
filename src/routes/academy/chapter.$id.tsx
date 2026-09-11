@@ -1,7 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Bookmark, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { CHAPTER_FIGURE, Figure, figuresFor } from "@/components/diagrams";
+import { CHAPTER_FIGURE, Figure } from "@/components/diagrams";
+import { ChapterReference } from "@/components/chapter-reference";
 import { ChapterGuide } from "@/components/learning-guide";
 import { ChapterLab, hasLab } from "@/components/labs";
 import { PageKicker, SubjectIcon } from "@/components/layout/shell";
@@ -15,7 +16,7 @@ import { guideFor } from "@/data/learning";
 import { MILL_PER_CHAPTER } from "@/data/mill/count";
 import { officialFor } from "@/data/official";
 import { papersForChapter } from "@/data/papers";
-import type { ExamTag, PlayItem, TheoryBlock } from "@/data/types";
+import type { ExamTag, PlayItem } from "@/data/types";
 import { useProgress } from "@/lib/progress";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,6 @@ export function ChapterPage() {
   const [tab, setTab] = useState<Tab>("theory");
   const [millItems, setMillItems] = useState<PlayItem[]>([]);
   const [seed, setSeed] = useState(1);
-  const [showFigs, setShowFigs] = useState(false);
   const setLast = useProgress((s) => s.setLastChapter);
   const markSection = useProgress((s) => s.markSection);
   const completeChapter = useProgress((s) => s.completeChapter);
@@ -64,12 +64,10 @@ export function ChapterPage() {
     };
   }, [id, seed, tab]);
   const heroFig = CHAPTER_FIGURE[id];
-  const extraFigs = figuresFor(id).filter((f) => f !== heroFig);
   const guide = guideFor(meta);
   const idx = CATALOG.findIndex((c) => c.id === id);
   const prev = idx > 0 ? CATALOG[idx - 1] : undefined;
   const next = idx >= 0 && idx < CATALOG.length - 1 ? CATALOG[idx + 1] : undefined;
-  const theoryHasHero = content.theory.some((b) => b.diagram === heroFig);
   const official = officialFor(id);
 
   return (
@@ -85,7 +83,9 @@ export function ChapterPage() {
         {meta.ncert} · {meta.unit}
       </PageKicker>
       <div className="mt-1 flex items-start justify-between gap-3">
-        <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{meta.title}</h1>
+        <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">
+          {meta.title}
+        </h1>
         <button
           type="button"
           onClick={() => toggleBookmark(id)}
@@ -141,132 +141,14 @@ export function ChapterPage() {
 
       {tab === "theory" && (
         <div className="mt-8 space-y-10">
-          <ChapterGuide meta={meta} content={content} guide={guide} heroFig={heroFig} official={official} />
-          <details className="rounded-2xl border border-border bg-surface p-5">
-            <summary className="cursor-pointer text-sm font-medium">Open full reference notes</summary>
-            <div className="mt-8 space-y-10">
-          {content.starter && (
-            <section className="rounded-xl border border-border bg-raised p-5">
-              <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">If you just started Class 11</p>
-              <h2 className="font-display mt-2 text-xl">{content.starter.heading}</h2>
-              <div className="mt-2">
-                <Prose text={content.starter.body} />
-              </div>
-              {content.starter.bullets && (
-                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
-                  {content.starter.bullets.map((b) => (
-                    <li key={b}>
-                      <Prose text={b} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-          {heroFig && !theoryHasHero && <Figure id={heroFig} />}
-          {official && (
-            <section className="rounded-xl border border-border bg-surface p-5">
-              <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">Official CBSE list</p>
-              <h2 className="font-display mt-2 text-xl">{official.unit}</h2>
-              <p className="mt-1 text-sm text-muted">
-                {official.ncert}
-                {official.periods ? ` · ${official.periods}` : ""}
-              </p>
-              <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
-                {official.bullets.map((b) => (
-                  <li key={b}>{b}</li>
-                ))}
-              </ul>
-              {official.jeeExtra.length > 0 && (
-                <>
-                  <p className="mt-4 text-[11px] tracking-[0.16em] text-subtle uppercase">
-                    What JEE still adds
-                  </p>
-                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-                    {official.jeeExtra.map((b) => (
-                      <li key={b}>{b}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </section>
-          )}
-          {extraFigs.length > 0 && (
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowFigs((s) => !s)}
-                className="text-sm text-muted hover:text-fg"
-              >
-                {showFigs ? "Hide extra figures" : `Show ${extraFigs.length} extra figure${extraFigs.length > 1 ? "s" : ""}`}
-              </button>
-              {showFigs && extraFigs.map((f) => <Figure key={f} id={f} />)}
-            </div>
-          )}
-          <section>
-            <h2 className="font-display text-xl">Objectives</h2>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
-              {meta.objectives.map((o) => (
-                <li key={o}>{o}</li>
-              ))}
-            </ul>
-          </section>
-          {content.classNotes && content.classNotes.length > 0 && (
-            <section className="space-y-10">
-              <div>
-                <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">Class notebook</p>
-                <h2 className="font-display mt-2 text-2xl">Definition first, then the board.</h2>
-                <p className="mt-2 max-w-2xl text-sm text-muted">
-                  Term, meaning, formula, trap — the same spine as a classroom note. Read this before
-                  the JEE stretch below.
-                </p>
-              </div>
-              {content.classNotes.map((block, i) => (
-                <NoteBlock key={block.id} block={block} index={i} />
-              ))}
-            </section>
-          )}
-          {content.theory.length > 0 && (
-            <section className="space-y-10">
-              {content.classNotes && content.classNotes.length > 0 && (
-                <div>
-                  <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">JEE stretch</p>
-                  <h2 className="font-display mt-2 text-2xl">What Main and Advanced still add.</h2>
-                </div>
-              )}
-              {content.theory.map((block) => (
-                <NoteBlock key={block.id} block={block} />
-              ))}
-            </section>
-          )}
-          <section>
-            <h2 className="font-display text-xl">Traps</h2>
-            <ul className="mt-3 space-y-2">
-              {content.traps.map((t) => (
-                <li key={t} className="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted">
-                  <Prose text={t} />
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section>
-            <h2 className="font-display text-xl">Exam tactics</h2>
-            <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted">
-              {content.tricks.map((t) => (
-                <li key={t}>
-                  <Prose text={t} />
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section>
-            <h2 className="font-display text-xl">How papers use this</h2>
-            <div className="mt-3">
-              <Prose text={content.pyqInsight} />
-            </div>
-          </section>
-            </div>
-          </details>
+          <ChapterGuide
+            meta={meta}
+            content={content}
+            guide={guide}
+            heroFig={heroFig}
+            official={official}
+          />
+          <ChapterReference meta={meta} content={content} official={official} />
         </div>
       )}
 
@@ -279,8 +161,8 @@ export function ChapterPage() {
               {heroFig && <Figure id={heroFig} />}
               <p className="max-w-2xl text-sm text-muted">
                 Interactive sliders live on the chapters where a moving picture actually teaches the
-                idea — projectile, incline, SHM, Gauss, YDSE, unit circle, Bayes, and the rest of the
-                lab map. Here the static figure plus the theory tab is the right load.
+                idea — projectile, incline, SHM, Gauss, YDSE, unit circle, Bayes, and the rest of
+                the lab map. Here the static figure plus the theory tab is the right load.
               </p>
             </div>
           )}
@@ -290,13 +172,12 @@ export function ChapterPage() {
       {tab === "formulas" && (
         <div className="mt-8 overflow-hidden rounded-xl border border-border">
           {content.formulas.length === 0 && (
-            <p className="px-4 py-6 text-sm text-muted">Formula sheet fills in with the full notes pack.</p>
+            <p className="px-4 py-6 text-sm text-muted">
+              Formula sheet fills in with the full notes pack.
+            </p>
           )}
           {content.formulas.map((f, i) => (
-            <div
-              key={`${f.name}-${i}`}
-              className="border-b border-border px-4 py-4 last:border-0"
-            >
+            <div key={`${f.name}-${i}`} className="border-b border-border px-4 py-4 last:border-0">
               <p className="text-xs tracking-wide text-subtle uppercase">{f.name}</p>
               <div className="mt-2 overflow-x-auto">
                 <TeX expr={f.latex} display />
@@ -346,11 +227,16 @@ export function ChapterPage() {
       {tab === "mill" && (
         <div className="mt-8">
           <p className="max-w-2xl text-sm text-muted">
-            Thirty-two fresh mill items for this chapter, drawn from a {MILL_PER_CHAPTER}-item computed
-            bank — mixed numericals and concept MCQs, numbers recomputed each shuffle. The mill is
-            built only when you open this tab, so the theory page stays light.
+            Thirty-two fresh mill items for this chapter, drawn from a {MILL_PER_CHAPTER}-item
+            computed bank — mixed numericals and concept MCQs, numbers recomputed each shuffle. The
+            mill is built only when you open this tab, so the theory page stays light.
           </p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => setSeed((s) => s + 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={() => setSeed((s) => s + 1)}
+          >
             Shuffle a new 32
           </Button>
           <div className="mt-6">
@@ -426,86 +312,6 @@ export function ChapterPage() {
         </div>
       </div>
     </article>
-  );
-}
-
-function NoteBlock({ block, index }: { block: TheoryBlock; index?: number }) {
-  return (
-    <section>
-      {index != null && (
-        <p className="text-xs tabular-nums tracking-[0.14em] text-subtle">
-          {String(index + 1).padStart(2, "0")}
-        </p>
-      )}
-      <h2 className={cn("font-display text-xl", index != null && "mt-1")}>{block.heading}</h2>
-      {block.diagram && <Figure id={block.diagram} />}
-      <div className={cn("mt-3", index != null && "rounded-xl border border-border bg-raised p-4")}>
-        <Prose text={block.body} />
-      </div>
-      {block.table && (
-        <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-raised">
-                {block.table.headers.map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {block.table.rows.map((row, i) => (
-                <tr key={row.join("-")} className="border-b border-border last:border-0">
-                  {row.map((cell) => (
-                    <td key={cell} className="px-3 py-2 text-muted">
-                      <Prose text={cell} compact />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {block.bullets && (
-        <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted">
-          {block.bullets.map((b) => (
-            <li key={b}>
-              <Prose text={b} />
-            </li>
-          ))}
-        </ul>
-      )}
-      {block.callout && <Callout kind={block.callout.kind} text={block.callout.text} />}
-    </section>
-  );
-}
-
-function Callout({
-  kind,
-  text,
-}: {
-  kind: "main" | "advanced" | "trap" | "board" | "extra";
-  text: string;
-}) {
-  const label =
-    kind === "main"
-      ? "JEE Main"
-      : kind === "advanced"
-        ? "JEE Advanced"
-        : kind === "trap"
-          ? "Trap"
-          : kind === "board"
-            ? "Boards"
-            : "Extra";
-  return (
-    <div className="mt-4 rounded-lg border border-border bg-raised px-4 py-3">
-      <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">{label}</p>
-      <div className="mt-1">
-        <Prose text={text} />
-      </div>
-    </div>
   );
 }
 
