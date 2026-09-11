@@ -8,8 +8,8 @@ import { patchTanStackManifest } from "./patch-tanstack-manifest.mjs";
 
 test("replaces the fallback manifest with the production asset manifest", () => {
   const outputDir = mkdtempSync(join(tmpdir(), "meridian-manifest-"));
-  const fallback = `scripts: [\"/@id/virtual:tanstack-start-dev-client-entry\"]`;
-  const production = `scripts: [\"/assets/index-abc123.js\"]`;
+  const fallback = `scripts: ["/@id/virtual:tanstack-start-dev-client-entry"]`;
+  const production = `scripts: ["/assets/index-abc123.js"]`;
 
   writeFileSync(join(outputDir, "_tanstack-start-manifest_v.mjs"), fallback);
   writeFileSync(

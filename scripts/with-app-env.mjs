@@ -111,7 +111,17 @@ function main(argv) {
     process.exit(2);
   }
   const env = mergeAppEnv(readAppEnv(projectRoot()), process.env);
-  const child = spawn(command, args, { stdio: "inherit", env });
+  // Windows ships bare commands (`vite`, `npm`) as `.cmd` shims that need a
+  // shell to resolve via PATH (npm adds node_modules/.bin). Full paths
+  // (`C:\...\node.exe`) and argv with shell metachars (`node -e "..."`)
+  // must NOT use a shell: cmd.exe would split on spaces and interpret
+  // parens/quotes. Unix keeps direct exec so signals and argv stay exact.
+  const isBareCommand = !command.includes("/") && !command.includes("\\");
+  const child = spawn(command, args, {
+    stdio: "inherit",
+    env,
+    shell: process.platform === "win32" && isBareCommand,
+  });
   // The dev server is long-running and is stopped by signalling this wrapper.
   for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
     process.on(signal, () => child.kill(signal));

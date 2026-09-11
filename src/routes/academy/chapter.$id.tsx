@@ -455,7 +455,7 @@ function NoteBlock({ block, index }: { block: TheoryBlock; index?: number }) {
               </tr>
             </thead>
             <tbody>
-              {block.table.rows.map((row, i) => (
+              {block.table.rows.map((row) => (
                 <tr key={row.join("-")} className="border-b border-border last:border-0">
                   {row.map((cell) => (
                     <td key={cell} className="px-3 py-2 text-muted">

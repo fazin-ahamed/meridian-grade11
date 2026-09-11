@@ -344,7 +344,7 @@ export const MATHS_REST: Record<string, ChapterContent> = {
   "math-3d-12": pack(
     "math-3d-12",
     [
-      T("t1", "Line", "Symmetric: $(x-x_0)/l=(y-y_0)/m=(z-z_0)/n=\\lambda$. Vector: $\\vec r=\\vec a+\\lambda\\vec b$. Two lines: intersecting (a common point), parallel ($\\vec b_1\\parallel\\vec b_2$), skew (neither). Shortest distance between skew lines $|\(\\vec a_2-\\vec a_1)\\cdot(\\vec b_1\\times\\vec b_2)|/|\\vec b_1\\times\\vec b_2|$.", { diagram: "vector-3d" }),
+      T("t1", "Line", "Symmetric: $(x-x_0)/l=(y-y_0)/m=(z-z_0)/n=\\lambda$. Vector: $\\vec r=\\vec a+\\lambda\\vec b$. Two lines: intersecting (a common point), parallel ($\\vec b_1\\parallel\\vec b_2$), skew (neither). Shortest distance between skew lines $|(\\vec a_2-\\vec a_1)\\cdot(\\vec b_1\\times\\vec b_2)|/|\\vec b_1\\times\\vec b_2|$.", { diagram: "vector-3d" }),
       T("t2", "Plane", "$\\vec r\\cdot\\hat n=p$ (normal form). $ax+by+cz+d=0$ with normal $(a,b,c)$. Plane through three points: $(\\vec r-\\vec a)\\cdot((\\vec b-\\vec a)\\times(\\vec c-\\vec a))=0$. Angle between planes = angle between normals. Angle between a line and a plane: $\\sin\\theta=|\\vec b\\cdot\\hat n|$ (complement of the angle with the normal)."),
       T("t3", "Line and plane together", "A line is parallel to a plane if $\\vec b\\cdot\\vec n=0$. It lies in the plane if additionally a point of the line satisfies the plane. Foot of perpendicular from a point to a plane: walk along the normal. Image of a point: twice the foot minus the point."),
     ],

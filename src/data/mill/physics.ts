@@ -1160,16 +1160,17 @@ function charges(i: number): PlayItem {
   if (m === 0) {
     const q = cycle([1, 2, 3, 4], i);
     const r = cycle([1, 2, 0.5], i);
-    const F = 9 * (q * q) / (r * r); // μC-scale: use 9e9 * (q e-6)^2 / r^2
     // Use q in μC, r in m, k=9e9: F = 9e9 * q^2 e-12 / r^2 = 9 q^2 / r^2 * 1e-3
+    // μC-scale: use 9e9 * (q e-6)^2 / r^2
     const force = (9 * q * q) / (r * r) * 0.001;
+    const rawCoulomb = (9 * q * q) / (r * r);
     return mcq({
       chapterId: "phy-charges",
       i,
       subject: "physics",
       stem: `Two charges ${q} μC each, ${r} m apart in air. Force magnitude is`,
       correct: `${force} N`,
-      wrong: [`${9 * q * q / (r * r)} N`, `${force * 10} N`, `${force / 9} N`],
+      wrong: [`${rawCoulomb} N`, `${force * 10} N`, `${force / 9} N`],
       why: `$F=9\\times10^9 (q\\times10^{-6})^2/r^2=9q^2\\times10^{-3}/r^2=${force}\\,\\mathrm{N}$.`,
     });
   }
@@ -1723,7 +1724,7 @@ function ray(i: number): PlayItem {
   if (m === 2) {
     const u = cycle([-20, -30, -15], i);
     const f = cycle([10, 15, 20], i);
-    const v = 1 / (1 / f + 1 / u); // wait: 1/v - 1/u = 1/f ⇒ 1/v = 1/f + 1/u
+    // 1/v - 1/u = 1/f ⇒ 1/v = 1/f + 1/u
     const V = 1 / (1 / f + 1 / u);
     return mcq({
       chapterId: "phy-ray",

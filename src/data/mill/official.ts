@@ -1887,7 +1887,7 @@ function ineq(i: number): PlayItem {
       i,
       subject: "maths",
       stem: "On the number line, $x>2$ is drawn with",
-      correct: "an open circle at 2, ray to $+\infty$",
+      correct: "an open circle at 2, ray to $+\\infty$",
       wrong: ["a filled circle at 2", "only the point 2", "the whole line"],
       why: "Official representation on the number line.",
     });

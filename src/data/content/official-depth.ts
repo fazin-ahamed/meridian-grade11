@@ -329,7 +329,7 @@ export const OFFICIAL_DEPTH: Record<string, Partial<ChapterContent>> = {
           bullets: [
             "Pictorial test: a vertical line hits the graph at most once $\\Leftrightarrow$ it is a function.",
             "Horizontal line hits at most once $\\Leftrightarrow$ one-one.",
-            "Cartesian $n(A\\times B)=n(A)n(B)$. Ordered pair $(a,b)$ is not $\{a,b\}$.",
+            "Cartesian $n(A\\times B)=n(A)n(B)$. Ordered pair $(a,b)$ is not $\\{a,b\\}$.",
           ],
         },
       ),
@@ -350,7 +350,7 @@ export const OFFICIAL_DEPTH: Record<string, Partial<ChapterContent>> = {
       T(
         "math-sets-official-roster",
         "How to write a set so a mark scheme cannot argue",
-        "Roster $\{2,3,5\\}$ vs set-builder $\{x\\in\\mathbb N:x\\text{ is prime}, x<6\\}$. Empty $\\varnothing$ is a subset of every set; $\\{\\varnothing\\}$ is not empty. Finite vs infinite: $\\mathbb N$ is infinite; a roster you can finish is finite. Equal sets: same elements, order and repetition do not count. Subsets of $\\mathbb R$ as intervals: $(a,b), [a,b], [a,b), (a,b]$, rays $(a,\\infty)$, $(−\\infty,b]$. Universal set $U$ is declared, not assumed. Venn is a proof tool, not a decoration. Properties of complement: $(A')'=A$, $A\\cup A'=U$, $A\\cap A'=\\varnothing$, De Morgan.",
+        "Roster $\\{2,3,5\\}$ vs set-builder $\\{x\\in\\mathbb N:x\\text{ is prime}, x<6\\}$. Empty $\\varnothing$ is a subset of every set; $\\{\\varnothing\\}$ is not empty. Finite vs infinite: $\\mathbb N$ is infinite; a roster you can finish is finite. Equal sets: same elements, order and repetition do not count. Subsets of $\\mathbb R$ as intervals: $(a,b), [a,b], [a,b), (a,b]$, rays $(a,\\infty)$, $(−\\infty,b]$. Universal set $U$ is declared, not assumed. Venn is a proof tool, not a decoration. Properties of complement: $(A')'=A$, $A\\cup A'=U$, $A\\cap A'=\\varnothing$, De Morgan.",
         { diagram: "venn" },
       ),
     ],

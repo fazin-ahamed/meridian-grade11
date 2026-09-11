@@ -1588,7 +1588,7 @@ function eq(i: number): PlayItem {
       i,
       subject: "chemistry",
       stem: `Henderson: $\\mathrm{p}K_a=${pKa}$, $[\\mathrm{A}^-]/[\\mathrm{HA}]=1$. pH is`,
-      answer: pKa,
+      answer: pH,
       tolerance: 0.02,
       why: "$\\mathrm{pH}=\\mathrm{p}K_a+\\log([\\mathrm{A}^-]/[\\mathrm{HA}])$. Dummy ratio ${ratio}.",
     });
@@ -2036,7 +2036,7 @@ function cplx(i: number): PlayItem {
     stem: "Argument of a negative real number is",
     correct: "$\\pi$ (principal)",
     wrong: ["$0$", "$\\pi/2$", "undefined always"],
-    why: "Principal Arg $\\in(-\pi,\\pi]$.",
+    why: "Principal Arg $\\in(-\\pi,\\pi]$.",
   });
 }
 

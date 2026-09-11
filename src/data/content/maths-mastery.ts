@@ -89,7 +89,7 @@ export const MATHS_MASTERY: Record<string, Partial<ChapterContent>> = {
       T(
         "math-pnc-derive",
         "Fundamental counting, nPr and nCr derived",
-        "FPC: if task A has $m$ ways and B has $n$ independent ways, A then B has $mn$ ways. $n!=n(n-1)\\cdots 1$, $0!=1$. A permutation of $n$ distinct taken $r$ at a time is an injection $\{1,\\dots,r\\}\\to$ the $n$-set: $n$ choices for the first, $n-1$ for the second, … so ${}^{n}P_{r}=n!/(n-r)!$. A combination forgets order: each $r$-subset was counted $r!$ times as a permutation, so ${}^{n}C_{r}={}^{n}P_{r}/r!=n!/(r!(n-r)!)$. Then ${}^{n}C_{r}={}^{n}C_{n-r}$. Circular permutations of $n$ distinct: $(n-1)!$ (rotations identified). Identical objects: $n!/(n_1!n_2!\\cdots)$.",
+        "FPC: if task A has $m$ ways and B has $n$ independent ways, A then B has $mn$ ways. $n!=n(n-1)\\cdots 1$, $0!=1$. A permutation of $n$ distinct taken $r$ at a time is an injection $\\{1,\\dots,r\\}\\to$ the $n$-set: $n$ choices for the first, $n-1$ for the second, … so ${}^{n}P_{r}=n!/(n-r)!$. A combination forgets order: each $r$-subset was counted $r!$ times as a permutation, so ${}^{n}C_{r}={}^{n}P_{r}/r!=n!/(r!(n-r)!)$. Then ${}^{n}C_{r}={}^{n}C_{n-r}$. Circular permutations of $n$ distinct: $(n-1)!$ (rotations identified). Identical objects: $n!/(n_1!n_2!\\cdots)$.",
         {
           callout: {
             kind: "board",
@@ -206,7 +206,7 @@ export const MATHS_MASTERY: Record<string, Partial<ChapterContent>> = {
       T(
         "math-inv-pv",
         "Principal values, domain, range, graphs",
-        "Each inverse trig function is the inverse of a restricted branch so that it is 1-1. $\\sin^{-1}x$: domain $[-1,1]$, range $[-\pi/2,\\pi/2]$. $\\cos^{-1}x$: domain $[-1,1]$, range $[0,\\pi]$. $\\tan^{-1}x$: domain $\\mathbb R$, range $(-\\pi/2,\\pi/2)$. Graphs: $\\sin^{-1}$ is odd, increasing through the origin; $\\cos^{-1}$ is decreasing from $\\pi$ to $0$; $\\tan^{-1}$ looks like a squeezed odd step. Identities: $\\sin^{-1}x+\\cos^{-1}x=\\pi/2$, $\\tan^{-1}x+\\cot^{-1}x=\\pi/2$.",
+        "Each inverse trig function is the inverse of a restricted branch so that it is 1-1. $\\sin^{-1}x$: domain $[-1,1]$, range $[-\\pi/2,\\pi/2]$. $\\cos^{-1}x$: domain $[-1,1]$, range $[0,\\pi]$. $\\tan^{-1}x$: domain $\\mathbb R$, range $(-\\pi/2,\\pi/2)$. Graphs: $\\sin^{-1}$ is odd, increasing through the origin; $\\cos^{-1}$ is decreasing from $\\pi$ to $0$; $\\tan^{-1}$ looks like a squeezed odd step. Identities: $\\sin^{-1}x+\\cos^{-1}x=\\pi/2$, $\\tan^{-1}x+\\cot^{-1}x=\\pi/2$.",
         { diagram: "unit-circle" },
       ),
     ],

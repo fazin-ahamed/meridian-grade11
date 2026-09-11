@@ -1,5 +1,5 @@
 import type { PlayItem } from "../types";
-import { choiceOf, cycle, mcq, nint, num } from "./build";
+import { cycle, mcq, num } from "./build";
 
 export function mathsItem(id: string, i: number): PlayItem | null {
   const table: Record<string, (n: number) => PlayItem> = {

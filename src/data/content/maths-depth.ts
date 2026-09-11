@@ -7,7 +7,7 @@ export const MATHS_DEPTH: Record<string, Partial<ChapterContent>> = {
       T(
         "math-sets-interval",
         "Representations, intervals, complement properties",
-        "A set is a well-defined collection. Roster $\{1,2,3\}$ vs set-builder $\{x\\in\\mathbb N:x<4\}$. Intervals: $[a,b]$ closed, $(a,b)$ open, $[a,b)$ half. $\\mathbb R= (-\\infty,\\infty)$. Complement: $A'=U\\setminus A$. De Morgan: $(A\\cup B)'=A'\\cap B'$ and $(A\\cap B)'=A'\\cup B'$. $A\\cup A'=U$, $A\\cap A'=\\varnothing$, $(A')'=A$. Difference $A\\setminus B=A\\cap B'$. Draw the Venn before you write an $n(\\cdot)$ equation.",
+        "A set is a well-defined collection. Roster $\\{1,2,3\\}$ vs set-builder $\\{x\\in\\mathbb N:x<4\\}$. Intervals: $[a,b]$ closed, $(a,b)$ open, $[a,b)$ half. $\\mathbb R= (-\\infty,\\infty)$. Complement: $A'=U\\setminus A$. De Morgan: $(A\\cup B)'=A'\\cap B'$ and $(A\\cap B)'=A'\\cup B'$. $A\\cup A'=U$, $A\\cap A'=\\varnothing$, $(A')'=A$. Difference $A\\setminus B=A\\cap B'$. Draw the Venn before you write an $n(\\cdot)$ equation.",
         { diagram: "venn" },
       ),
     ],
@@ -21,7 +21,7 @@ export const MATHS_DEPTH: Record<string, Partial<ChapterContent>> = {
       T(
         "math-rel11-fun",
         "Cartesian products and the standard graphs",
-        "$A\\times B=\\{(a,b):a\\in A, b\\in B\\}$, so $n(A\\times B)=n(A)\\,n(B)$. A relation $R\\subset A\\times B$. A function $f:A\\to B$ assigns exactly one $f(a)\\in B$ to each $a\\in A$. Domain is $A$; co-domain is $B$; range is $\{f(a)\\}\\subset B$. Standard graphs you must be able to draw from a blank page: $y=x$, $y=x^2$, $y=|x|$, $y=\\mathrm{sgn}(x)$, $y=[x]$ (greatest integer, jump discontinuities), $y=e^x$, $y=\\ln x$, $y=1/x$. Sum/product of functions: $(f+g)(x)=f(x)+g(x)$ on the intersection of domains.",
+        "$A\\times B=\\{(a,b):a\\in A, b\\in B\\}$, so $n(A\\times B)=n(A)\\,n(B)$. A relation $R\\subset A\\times B$. A function $f:A\\to B$ assigns exactly one $f(a)\\in B$ to each $a\\in A$. Domain is $A$; co-domain is $B$; range is $\\{f(a)\\}\\subset B$. Standard graphs you must be able to draw from a blank page: $y=x$, $y=x^2$, $y=|x|$, $y=\\mathrm{sgn}(x)$, $y=[x]$ (greatest integer, jump discontinuities), $y=e^x$, $y=\\ln x$, $y=1/x$. Sum/product of functions: $(f+g)(x)=f(x)+g(x)$ on the intersection of domains.",
       ),
     ],
   },

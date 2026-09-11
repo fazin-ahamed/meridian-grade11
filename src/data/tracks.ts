@@ -39,7 +39,6 @@ const CHE12 = CATALOG.filter((c) => c.subject === "chemistry" && c.classLevel ==
 const MAT11 = CATALOG.filter((c) => c.subject === "maths" && c.classLevel === 11).map((c) => c.id);
 const MAT12 = CATALOG.filter((c) => c.subject === "maths" && c.classLevel === 12 && c.jeeMain).map((c) => c.id);
 
-const MAIN = CATALOG.filter((c) => c.jeeMain).map((c) => c.id);
 const ADV = CATALOG.filter((c) => c.jeeAdvanced).map((c) => c.id);
 const HIGH = CATALOG.filter((c) => c.mainWeight === "very-high" || c.advWeight === "very-high").map((c) => c.id);
 const BOARDS = CATALOG.filter((c) => c.boards).map((c) => c.id);
