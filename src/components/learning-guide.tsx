@@ -50,31 +50,71 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
   const [step, setStep] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
-  const [showTopicAnswer, setShowTopicAnswer] = useState(false);
-  const [topicPicked, setTopicPicked] = useState<number | null>(null);
-  const current = topics[clampLessonStep(step, topics.length)]!;
   const firstQuestion = content.quiz[0];
-  const complete = topics.length > 0 && step === topics.length - 1;
 
   useEffect(() => {
     setMode("guided");
     setStep(0);
     setShowAnswer(false);
     setPicked(null);
-    setShowTopicAnswer(false);
-    setTopicPicked(null);
   }, [meta.id]);
+
+  const scrollToTopic = useCallback(
+    (next: number) => {
+      const topic = topics[clampLessonStep(next, topics.length)];
+      if (!topic || typeof window === "undefined") return;
+
+      window.requestAnimationFrame(() => {
+        document.getElementById(`guided-topic-${topic.id}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    },
+    [topics],
+  );
 
   const selectStep = useCallback(
     (next: number) => {
-      setStep(clampLessonStep(next, topics.length));
-      setShowAnswer(false);
-      setPicked(null);
-      setShowTopicAnswer(false);
-      setTopicPicked(null);
+      const target = clampLessonStep(next, topics.length);
+      setStep(target);
+      if (mode === "guided") scrollToTopic(target);
     },
-    [topics.length],
+    [mode, scrollToTopic, topics.length],
   );
+
+  const selectGuidedMode = useCallback(() => {
+    setMode("guided");
+    scrollToTopic(step);
+  }, [scrollToTopic, step]);
+
+  useEffect(() => {
+    if (mode !== "guided" || typeof window === "undefined" || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        const nextIndex = visible?.target.getAttribute("data-topic-index");
+        if (nextIndex == null) return;
+
+        const parsedIndex = Number(nextIndex);
+        if (!Number.isInteger(parsedIndex)) return;
+        setStep((current) => (current === parsedIndex ? current : parsedIndex));
+      },
+      { rootMargin: "-16% 0px -64% 0px", threshold: [0.1, 0.35, 0.6] },
+    );
+
+    topics.forEach((topic) => {
+      const element = document.getElementById(`guided-topic-${topic.id}`);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [mode, topics]);
 
   const sidebarRegistration = useMemo(
     () => ({
@@ -106,7 +146,7 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
             <p className="mt-3 text-sm leading-relaxed text-muted">{guide.bigIdea}</p>
           </div>
           <Badge variant="outline" className="gap-2">
-            <BookOpenCheck className="size-3.5" /> topic-by-topic lesson
+            <BookOpenCheck className="size-3.5" /> scroll-first lesson
           </Badge>
         </div>
 
@@ -149,7 +189,7 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
                   "min-h-10 rounded-md px-3 text-sm",
                   mode === "guided" ? "bg-accent text-accent-fg" : "text-muted hover:text-fg",
                 )}
-                onClick={() => setMode("guided")}
+                onClick={selectGuidedMode}
               >
                 <span className="inline-flex items-center gap-2">
                   <Eye className="size-4" /> Guided
@@ -185,18 +225,30 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
 
       <section className="min-w-0">
         {mode === "guided" ? (
-          <TeachingTopicBlock
-            key={current.id}
-            topic={current}
-            index={step}
-            total={topics.length}
-            picked={topicPicked}
-            showAnswer={showTopicAnswer}
-            onPick={setTopicPicked}
-            onReveal={() => setShowTopicAnswer(true)}
-            onPrevious={() => selectStep(moveLessonStep(step, topics.length, -1))}
-            onNext={() => selectStep(moveLessonStep(step, topics.length, 1))}
-          />
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/25 bg-accent/5 px-4 py-3">
+              <div>
+                <p className="text-xs font-medium tracking-[0.14em] text-accent uppercase">
+                  Continuous guided lesson
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  Every topic is already loaded below. Scroll naturally, use the sidebar to jump,
+                  or use the buttons as shortcuts.
+                </p>
+              </div>
+              <Badge variant="outline">{topics.length} sections to explore</Badge>
+            </div>
+            {topics.map((topic, index) => (
+              <ContinuousTeachingTopic
+                key={topic.id}
+                topic={topic}
+                index={index}
+                total={topics.length}
+                focused={step === index}
+                onFocus={selectStep}
+              />
+            ))}
+          </div>
         ) : (
           <OutlineBlocks topics={topics} active={step} onSelect={selectStep} />
         )}
@@ -269,7 +321,7 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
         </details>
       )}
 
-      {complete && firstQuestion && (
+      {mode === "guided" && firstQuestion && (
         <RetrievalCheckpoint
           question={firstQuestion}
           picked={picked}
@@ -291,12 +343,52 @@ function InfoCard({ label, text }: { label: string; text: string }) {
   );
 }
 
+function ContinuousTeachingTopic({
+  topic,
+  index,
+  total,
+  focused,
+  onFocus,
+}: {
+  topic: TeachingTopic;
+  index: number;
+  total: number;
+  focused: boolean;
+  onFocus: (index: number) => void;
+}) {
+  const [picked, setPicked] = useState<number | null>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  return (
+    <div
+      id={`guided-topic-${topic.id}`}
+      data-topic-index={index}
+      className="scroll-mt-6"
+      aria-current={focused ? "step" : undefined}
+    >
+      <TeachingTopicBlock
+        topic={topic}
+        index={index}
+        total={total}
+        picked={picked}
+        showAnswer={showAnswer}
+        isFocused={focused}
+        onPick={setPicked}
+        onReveal={() => setShowAnswer(true)}
+        onPrevious={() => onFocus(moveLessonStep(index, total, -1))}
+        onNext={() => onFocus(moveLessonStep(index, total, 1))}
+      />
+    </div>
+  );
+}
+
 function TeachingTopicBlock({
   topic,
   index,
   total,
   picked,
   showAnswer,
+  isFocused,
   onPick,
   onReveal,
   onPrevious,
@@ -307,13 +399,19 @@ function TeachingTopicBlock({
   total: number;
   picked: number | null;
   showAnswer: boolean;
+  isFocused?: boolean;
   onPick: (index: number) => void;
   onReveal: () => void;
   onPrevious: () => void;
   onNext: () => void;
 }) {
   return (
-    <article className="rounded-3xl border border-border bg-surface p-6 md:p-9">
+    <article
+      className={cn(
+        "rounded-3xl border border-border bg-surface p-6 transition-colors md:p-9",
+        isFocused && "border-accent/60",
+      )}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Badge variant="outline">
           Topic {index + 1} of {total}
