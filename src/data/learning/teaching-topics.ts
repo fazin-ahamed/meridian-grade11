@@ -958,6 +958,7 @@ function masteryBlocksFor(content: ChapterContent): TheoryBlock[] {
         heading: section.title,
         body: section.body,
         bullets: section.bullets,
+        diagram: section.diagram,
       })),
     );
 }

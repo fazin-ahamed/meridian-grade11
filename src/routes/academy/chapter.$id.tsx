@@ -1,11 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Bookmark, Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Bookmark, Check, ChevronLeft, ChevronRight, Clock3, Layers3, Target } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CHAPTER_FIGURE, Figure } from "@/components/diagrams";
 import { ChapterReference } from "@/components/chapter-reference";
 import { ChapterGuide } from "@/components/learning-guide";
 import { ChapterLab, hasLab } from "@/components/labs";
+import { clampLessonStep } from "@/components/learning-navigation";
 import { PageKicker, SubjectIcon } from "@/components/layout/shell";
+import { useRegisterChapterSidebar } from "@/components/layout/shell-context";
 import { DrillSession } from "@/components/session";
 import { Prose, TeX } from "@/components/tex";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { CATALOG, CHAPTER_BY_ID } from "@/data/catalog";
 import { getContent } from "@/data/content";
 import { guideFor } from "@/data/learning";
+import { teachingTopicsFor } from "@/data/learning/teaching-topics";
 import { MILL_PER_CHAPTER } from "@/data/mill/count";
 import { officialFor } from "@/data/official";
 import { papersForChapter } from "@/data/papers";
@@ -24,19 +27,28 @@ export const Route = createFileRoute("/academy/chapter/$id")({
   component: ChapterPage,
 });
 
-const BASE_TABS = ["theory", "lab", "formulas", "problems", "quiz", "mill", "boost"] as const;
+const BASE_TABS = [
+  "lesson",
+  "reference",
+  "lab",
+  "formulas",
+  "problems",
+  "quiz",
+  "mill",
+  "boost",
+] as const;
 type Tab = (typeof BASE_TABS)[number] | "papers";
 
 export function ChapterPage() {
   const { id } = Route.useParams();
   const meta = CHAPTER_BY_ID[id];
   if (!meta) throw notFound();
-  const content = getContent(id);
-  const papers = papersForChapter(id);
+  const content = useMemo(() => getContent(id), [id]);
+  const papers = useMemo(() => papersForChapter(id), [id]);
   const tabs: Tab[] = papers.length
-    ? ["theory", "lab", "formulas", "problems", "quiz", "papers", "mill", "boost"]
+    ? ["lesson", "reference", "lab", "formulas", "problems", "quiz", "papers", "mill", "boost"]
     : [...BASE_TABS];
-  const [tab, setTab] = useState<Tab>("theory");
+  const [tab, setTab] = useState<Tab>("lesson");
   const [millItems, setMillItems] = useState<PlayItem[]>([]);
   const [seed, setSeed] = useState(1);
   const setLast = useProgress((s) => s.setLastChapter);
@@ -47,11 +59,56 @@ export function ChapterPage() {
   const ch = useProgress((s) => s.chapters[id]);
   const notes = useProgress((s) => s.notes[id] ?? "");
   const setNote = useProgress((s) => s.setNote);
+  const guide = useMemo(() => guideFor(meta), [meta]);
+  const lessonTopics = useMemo(
+    () => teachingTopicsFor(meta, content, guide),
+    [content, guide, meta],
+  );
+  const [activeLessonTopic, setActiveLessonTopic] = useState(0);
+  const [pendingLessonTopic, setPendingLessonTopic] = useState<number | null>(null);
+
+  const scrollToLessonTopic = useCallback(
+    (index: number) => {
+      if (typeof window === "undefined") return;
+      window.requestAnimationFrame(() => {
+        document.getElementById(`guided-topic-${lessonTopics[index]?.id}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    },
+    [lessonTopics],
+  );
+
+  const selectLessonTopic = useCallback(
+    (next: number) => {
+      const target = clampLessonStep(next, lessonTopics.length);
+      setActiveLessonTopic(target);
+      if (tab !== "lesson") {
+        setPendingLessonTopic(target);
+        setTab("lesson");
+        return;
+      }
+      scrollToLessonTopic(target);
+    },
+    [lessonTopics.length, scrollToLessonTopic, tab],
+  );
 
   useEffect(() => {
     setLast(id);
-    setTab("theory");
+    setTab("lesson");
+    setActiveLessonTopic(0);
+    setPendingLessonTopic(null);
   }, [id, setLast]);
+
+  useEffect(() => {
+    if (tab !== "lesson" || pendingLessonTopic == null) return;
+    const frame = window.requestAnimationFrame(() => {
+      scrollToLessonTopic(pendingLessonTopic);
+      setPendingLessonTopic(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [pendingLessonTopic, scrollToLessonTopic, tab]);
 
   useEffect(() => {
     if (tab !== "mill") return;
@@ -63,8 +120,23 @@ export function ChapterPage() {
       dead = true;
     };
   }, [id, seed, tab]);
+  const sidebarRegistration = useMemo(
+    () => ({
+      subject:
+        meta.subject === "maths"
+          ? "Mathematics"
+          : meta.subject[0]!.toUpperCase() + meta.subject.slice(1),
+      chapterTitle: meta.title,
+      topics: lessonTopics.map((topic) => topic.title),
+      activeTopic: activeLessonTopic,
+      onSelectTopic: selectLessonTopic,
+    }),
+    [activeLessonTopic, lessonTopics, meta.subject, meta.title, selectLessonTopic],
+  );
+
+  useRegisterChapterSidebar(sidebarRegistration);
+
   const heroFig = CHAPTER_FIGURE[id];
-  const guide = guideFor(meta);
   const idx = CATALOG.findIndex((c) => c.id === id);
   const prev = idx > 0 ? CATALOG[idx - 1] : undefined;
   const next = idx >= 0 && idx < CATALOG.length - 1 ? CATALOG[idx + 1] : undefined;
@@ -72,43 +144,65 @@ export function ChapterPage() {
 
   return (
     <article className="mx-auto max-w-5xl">
-      <Link
-        to="/academy/subject/$subject"
-        params={{ subject: meta.subject }}
-        className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg"
-      >
-        <ChevronLeft className="size-4" /> {meta.subject}
-      </Link>
-      <PageKicker>
-        {meta.ncert} · {meta.unit}
-      </PageKicker>
-      <div className="mt-1 flex items-start justify-between gap-3">
-        <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">
-          {meta.title}
-        </h1>
-        <button
-          type="button"
-          onClick={() => toggleBookmark(id)}
-          className="size-11 shrink-0 rounded-md border border-border text-muted hover:text-fg"
-          aria-label="Bookmark"
+      <header className="border-b border-border pb-8">
+        <Link
+          to="/academy/subject/$subject"
+          params={{ subject: meta.subject }}
+          className="inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-fg"
         >
-          <Bookmark className={cn("mx-auto size-4", bookmarks.includes(id) && "fill-fg text-fg")} />
-        </button>
-      </div>
-      <p className="mt-3 max-w-2xl text-muted">{meta.summary}</p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Badge className="gap-1">
-          <SubjectIcon subject={meta.subject} />
-          Class {meta.classLevel === "both" ? "11–12" : meta.classLevel}
-        </Badge>
-        {meta.jeeMain && <Badge variant="outline">Main · {meta.mainWeight}</Badge>}
-        {meta.jeeAdvanced && <Badge variant="outline">Advanced · {meta.advWeight}</Badge>}
-        {meta.boards && <Badge variant="outline">Boards</Badge>}
-        <Badge variant="outline">{meta.hours}h</Badge>
-        <Badge variant="outline">Difficulty {meta.difficulty}/5</Badge>
-      </div>
+          <ChevronLeft className="size-4" /> Back to {meta.subject}
+        </Link>
+        <PageKicker>
+          {meta.ncert} · {meta.unit}
+        </PageKicker>
+        <div className="mt-1 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-display text-4xl font-medium tracking-tight text-balance md:text-5xl">
+              {meta.title}
+            </h1>
+            <p className="mt-4 max-w-3xl text-[1.02rem] leading-relaxed text-muted">
+              {meta.summary}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => toggleBookmark(id)}
+            className="grid size-11 shrink-0 place-items-center rounded-lg border border-border text-muted transition-colors hover:bg-raised hover:text-fg"
+            aria-label={bookmarks.includes(id) ? "Remove bookmark" : "Bookmark chapter"}
+          >
+            <Bookmark className={cn("size-4", bookmarks.includes(id) && "fill-fg text-fg")} />
+          </button>
+        </div>
 
-      <div className="mt-8 flex gap-1 overflow-x-auto border-b border-border">
+        <div className="mt-7 grid gap-0 border-y border-border sm:grid-cols-3">
+          <ChapterStat
+            icon={Layers3}
+            label="Lesson map"
+            value={`${lessonSectionCount(content)} sections`}
+          />
+          <ChapterStat icon={Clock3} label="Suggested time" value={`${meta.hours} hours`} />
+          <ChapterStat
+            icon={Target}
+            label="Exam focus"
+            value={meta.jeeAdvanced ? "Main + Advanced" : meta.jeeMain ? "Boards + Main" : "Boards"}
+          />
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-subtle">
+          <span className="inline-flex items-center gap-1.5">
+            <SubjectIcon subject={meta.subject} /> Class{" "}
+            {meta.classLevel === "both" ? "11–12" : meta.classLevel}
+          </span>
+          {meta.jeeMain && <span>Main · {meta.mainWeight}</span>}
+          {meta.jeeAdvanced && <span>Advanced · {meta.advWeight}</span>}
+          <span>Difficulty {meta.difficulty}/5</span>
+        </div>
+      </header>
+
+      <nav
+        className="sticky top-2 z-10 mt-6 flex gap-1 overflow-x-auto border-y border-border bg-bg/90 backdrop-blur-md"
+        aria-label="Chapter workspace"
+      >
         {tabs.map((t) => (
           <button
             key={t}
@@ -118,36 +212,51 @@ export function ChapterPage() {
               markSection(id, t);
             }}
             className={cn(
-              "h-11 shrink-0 px-4 text-sm capitalize",
+              "h-12 shrink-0 px-3 text-sm transition-colors sm:px-4",
               tab === t ? "border-b-2 border-accent text-fg" : "text-muted hover:text-fg",
             )}
           >
             {t === "boost"
               ? "Extras"
               : t === "mill"
-                ? "Mill"
+                ? "Practice mill"
                 : t === "lab"
                   ? hasLab(id)
                     ? "Lab · live"
                     : "Lab"
-                  : t === "theory"
-                    ? "Notes"
-                    : t === "papers"
-                      ? `Papers · ${papers.length}`
-                      : t}
+                  : t === "lesson"
+                    ? "Lesson"
+                    : t === "reference"
+                      ? "Reference"
+                      : t === "formulas"
+                        ? "Formula shelf"
+                        : t === "problems"
+                          ? "Worked problems"
+                          : t === "quiz"
+                            ? "Chapter quiz"
+                            : t === "papers"
+                              ? `Papers · ${papers.length}`
+                              : t}
           </button>
         ))}
-      </div>
+      </nav>
 
-      {tab === "theory" && (
-        <div className="mt-8 space-y-10">
+      {tab === "lesson" && (
+        <div className="mt-8">
           <ChapterGuide
             meta={meta}
             content={content}
             guide={guide}
             heroFig={heroFig}
             official={official}
+            activeTopic={activeLessonTopic}
+            onActiveTopicChange={setActiveLessonTopic}
           />
+        </div>
+      )}
+
+      {tab === "reference" && (
+        <div className="mt-8">
           <ChapterReference meta={meta} content={content} official={official} />
         </div>
       )}
@@ -315,6 +424,33 @@ export function ChapterPage() {
   );
 }
 
+function lessonSectionCount(content: ReturnType<typeof getContent>): number {
+  const masterySections = (content.mastery ?? [])
+    .filter((module) => module.includeInGuide !== false)
+    .reduce((total, module) => total + module.sections.length, 0);
+  return masterySections || content.classNotes?.length || content.theory.length;
+}
+
+function ChapterStat({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Clock3;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 py-4 sm:border-r sm:border-border sm:px-4 sm:first:pl-0 sm:last:border-r-0">
+      <Icon className="size-4 text-accent" strokeWidth={1.7} />
+      <div>
+        <p className="text-[11px] tracking-[0.12em] text-subtle uppercase">{label}</p>
+        <p className="mt-1 text-sm font-medium text-fg">{value}</p>
+      </div>
+    </div>
+  );
+}
+
 function Worked(w: {
   exam: ExamTag;
   prompt: string;
@@ -376,7 +512,8 @@ function QuizPanel({
   return (
     <div className="mt-8 space-y-6">
       <p className="text-sm text-muted">
-        Hand-written chapter quiz. For a 20-item computed mill with new numbers, open the Mill tab.
+        Chapter quiz with exam-tagged options. For fresh numbers and mixed difficulty, open the
+        Practice mill.
       </p>
       {best != null && (
         <p className="text-sm text-muted">

@@ -10,6 +10,7 @@ import { PHYSICS_CONTENT } from "./physics";
 import { PHYSICS_DEPTH } from "./physics-depth";
 import { PHYSICS_EXPERIMENTAL, PHYSICS_MASTERY } from "./physics-mastery";
 import { PHYSICS_MASTERY_COURSE } from "./physics-mastery-course";
+import { PHYSICS_GRADE11_COURSE } from "./physics-grade11-course";
 import { PHYSICS_REST } from "./physics-rest";
 import { PHYSICS_XII } from "./physics-xii";
 import { CLASSROOM_NOTES } from "./classroom-notes";
@@ -33,6 +34,7 @@ const DEPTH_LAYERS: Record<string, Partial<ChapterContent>>[] = [
   OFFICIAL_DEPTH,
   CLASSROOM_NOTES,
   PHYSICS_MASTERY_COURSE,
+  PHYSICS_GRADE11_COURSE,
 ];
 
 function merge(base: ChapterContent, extra: Partial<ChapterContent>): ChapterContent {

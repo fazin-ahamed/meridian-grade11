@@ -20,10 +20,7 @@ import {
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { buildSidebarModel } from "./navigation-model";
-import {
-  ShellNavigationContext,
-  type ChapterSidebarRegistration,
-} from "./shell-context";
+import { ShellNavigationContext, type ChapterSidebarRegistration } from "./shell-context";
 
 const NAV = [
   { to: "/academy", label: "Atlas", icon: LayoutGrid, exact: true },
@@ -54,10 +51,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     [chapterSidebar, pathname],
   );
 
-  const navigationValue = useMemo(
-    () => ({ chapterSidebar, setChapterSidebar }),
-    [chapterSidebar],
-  );
+  const navigationValue = useMemo(() => ({ chapterSidebar, setChapterSidebar }), [chapterSidebar]);
 
   return (
     <ShellNavigationContext.Provider value={navigationValue}>
@@ -139,7 +133,11 @@ function Sidebar({
       </div>
 
       {model.mode === "chapter" && chapterSidebar ? (
-        <ChapterSidebar chapterSidebar={chapterSidebar} model={model} onCloseMobile={onCloseMobile} />
+        <ChapterSidebar
+          chapterSidebar={chapterSidebar}
+          model={model}
+          onCloseMobile={onCloseMobile}
+        />
       ) : (
         <GlobalSidebar model={model} onCloseMobile={onCloseMobile} />
       )}
@@ -159,8 +157,13 @@ function GlobalSidebar({
   onCloseMobile: () => void;
 }) {
   return (
-    <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4" aria-label="Main navigation">
-      <p className="mb-2 px-3 text-[10px] font-medium tracking-[0.18em] text-subtle uppercase">Study space</p>
+    <nav
+      className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4"
+      aria-label="Main navigation"
+    >
+      <p className="mb-2 px-3 text-[10px] font-medium tracking-[0.18em] text-subtle uppercase">
+        Study space
+      </p>
       {NAV.map((item) => {
         const active = model.items.find((candidate) => candidate.label === item.label)?.active;
         const Icon = item.icon;
@@ -208,24 +211,33 @@ function ChapterSidebar({
           <ArrowLeft className="size-3.5" /> {model.backLabel}
         </Link>
         <p className="mt-5 text-[10px] font-medium tracking-[0.18em] text-subtle uppercase">
-          {chapterSidebar.subject} · chapter route
+          {chapterSidebar.subject} · chapter map
         </p>
         <h2 className="font-display mt-2 text-xl leading-tight">{chapterSidebar.chapterTitle}</h2>
         <div className="mt-5 flex items-center justify-between text-xs text-subtle">
-          <span>Small steps, one idea at a time</span>
+          <span>Scroll through the lesson</span>
           <span className="font-mono tabular-nums">
             {chapterSidebar.activeTopic + 1}/{chapterSidebar.topics.length}
           </span>
         </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-raised" aria-label="Lesson progress">
+        <div
+          className="mt-2 h-1 overflow-hidden rounded-full bg-raised"
+          aria-label="Lesson progress"
+        >
           <div
             className="h-full rounded-full bg-accent transition-[width] duration-200"
             style={{ width: `${progress}%` }}
           />
         </div>
+        <p className="mt-3 text-xs leading-relaxed text-subtle">
+          The full chapter is loaded below. Choose a section to jump there.
+        </p>
       </div>
 
-      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Chapter topics">
+      <nav
+        className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-4"
+        aria-label="Chapter topics"
+      >
         {chapterSidebar.topics.map((topic, index) => {
           const active = model.items[index]?.active;
           return (
@@ -237,12 +249,19 @@ function ChapterSidebar({
                 onCloseMobile();
               }}
               className={cn(
-                "flex min-h-11 w-full items-start gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                active ? "bg-raised text-fg" : "text-muted hover:bg-raised/70 hover:text-fg",
+                "flex min-h-11 w-full items-start gap-3 rounded-md border-l-2 px-3 py-2 text-left text-sm transition-colors",
+                active
+                  ? "border-accent bg-raised text-fg"
+                  : "border-transparent text-muted hover:bg-raised/70 hover:text-fg",
               )}
               aria-current={active ? "step" : undefined}
             >
-              <span className={cn("mt-0.5 font-mono text-xs tabular-nums", active ? "text-fg" : "text-subtle")}>
+              <span
+                className={cn(
+                  "mt-0.5 font-mono text-xs tabular-nums",
+                  active ? "text-fg" : "text-subtle",
+                )}
+              >
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="line-clamp-2">{topic}</span>
@@ -267,12 +286,16 @@ export function SubjectIcon({
 
 export function PageKicker({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-[11px] font-medium tracking-[0.2em] text-subtle uppercase">{children}</p>
+    <p className="mb-2 text-[11px] font-medium tracking-[0.2em] text-subtle uppercase">
+      {children}
+    </p>
   );
 }
 
 export function PageTitle({ children }: { children: React.ReactNode }) {
-  return <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{children}</h1>;
+  return (
+    <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{children}</h1>
+  );
 }
 
 export function EmptyHint({ children }: { children: React.ReactNode }) {

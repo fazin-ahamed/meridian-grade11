@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Figure } from "@/components/diagrams";
-import { useRegisterChapterSidebar } from "@/components/layout/shell-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { clampLessonStep, moveLessonStep } from "@/components/learning-navigation";
@@ -40,24 +39,43 @@ type ChapterGuideProps = {
   guide: Grade11Guide;
   heroFig?: string;
   official?: OfficialSummary;
+  activeTopic?: number;
+  onActiveTopicChange?: (index: number) => void;
 };
 
 type RouteMode = "guided" | "outline";
 
-export function ChapterGuide({ meta, content, guide, heroFig, official }: ChapterGuideProps) {
+export function ChapterGuide({
+  meta,
+  content,
+  guide,
+  heroFig,
+  official,
+  activeTopic,
+  onActiveTopicChange,
+}: ChapterGuideProps) {
   const topics = useMemo(() => teachingTopicsFor(meta, content, guide), [content, guide, meta]);
   const [mode, setMode] = useState<RouteMode>("guided");
-  const [step, setStep] = useState(0);
+  const [internalStep, setInternalStep] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
+  const step = activeTopic ?? internalStep;
   const firstQuestion = content.quiz[0];
+
+  const setActiveStep = useCallback(
+    (next: number) => {
+      setInternalStep(next);
+      onActiveTopicChange?.(next);
+    },
+    [onActiveTopicChange],
+  );
 
   useEffect(() => {
     setMode("guided");
-    setStep(0);
+    setActiveStep(0);
     setShowAnswer(false);
     setPicked(null);
-  }, [meta.id]);
+  }, [meta.id, setActiveStep]);
 
   const scrollToTopic = useCallback(
     (next: number) => {
@@ -77,10 +95,10 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
   const selectStep = useCallback(
     (next: number) => {
       const target = clampLessonStep(next, topics.length);
-      setStep(target);
+      setActiveStep(target);
       if (mode === "guided") scrollToTopic(target);
     },
-    [mode, scrollToTopic, topics.length],
+    [mode, scrollToTopic, setActiveStep, topics.length],
   );
 
   const selectGuidedMode = useCallback(() => {
@@ -89,7 +107,11 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
   }, [scrollToTopic, step]);
 
   useEffect(() => {
-    if (mode !== "guided" || typeof window === "undefined" || typeof IntersectionObserver === "undefined") {
+    if (
+      mode !== "guided" ||
+      typeof window === "undefined" ||
+      typeof IntersectionObserver === "undefined"
+    ) {
       return;
     }
 
@@ -103,7 +125,11 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
 
         const parsedIndex = Number(nextIndex);
         if (!Number.isInteger(parsedIndex)) return;
-        setStep((current) => (current === parsedIndex ? current : parsedIndex));
+        setInternalStep((current) => {
+          if (current === parsedIndex) return current;
+          onActiveTopicChange?.(parsedIndex);
+          return parsedIndex;
+        });
       },
       { rootMargin: "-16% 0px -64% 0px", threshold: [0.1, 0.35, 0.6] },
     );
@@ -114,27 +140,11 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
     });
 
     return () => observer.disconnect();
-  }, [mode, topics]);
-
-  const sidebarRegistration = useMemo(
-    () => ({
-      subject:
-        meta.subject === "maths"
-          ? "Mathematics"
-          : meta.subject[0]!.toUpperCase() + meta.subject.slice(1),
-      chapterTitle: meta.title,
-      topics: topics.map((topic) => topic.title),
-      activeTopic: step,
-      onSelectTopic: selectStep,
-    }),
-    [meta.subject, meta.title, selectStep, step, topics],
-  );
-
-  useRegisterChapterSidebar(sidebarRegistration);
+  }, [mode, onActiveTopicChange, topics]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10">
-      <section className="rounded-3xl border border-border bg-surface p-6 md:p-8">
+    <div className="mx-auto max-w-5xl space-y-12">
+      <section className="border-b border-border pb-10">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-2xl">
             <p className="text-xs font-medium tracking-[0.16em] text-subtle uppercase">
@@ -150,13 +160,13 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
           </Badge>
         </div>
 
-        <div className="mt-7 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
+        <div className="mt-8 grid border-y border-border md:grid-cols-3">
           <InfoCard label="Before you begin" text={guide.bridge} />
           <InfoCard label="How to represent it" text={guide.representation} />
           <InfoCard label="Your lab mission" text={guide.labMission} />
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm text-muted">
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-l-2 border-accent/50 pl-4 text-sm text-muted">
           <span className="inline-flex items-center gap-2 font-medium text-fg">
             <Target className="size-4 text-accent" /> {topics.length} teachable topics
           </span>
@@ -169,7 +179,7 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
           </span>
         </div>
 
-        <div className="mt-6 rounded-xl border border-border bg-raised/60 p-4">
+        <div className="mt-8 border-y border-border py-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">
@@ -177,16 +187,12 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
               </p>
               <p className="mt-1 text-sm text-muted">{guide.lens.instruction}</p>
             </div>
-            <div
-              className="flex rounded-lg border border-border bg-surface p-1"
-              role="group"
-              aria-label="Theory view"
-            >
+            <div className="flex gap-1" role="group" aria-label="Theory view">
               <button
                 type="button"
                 aria-pressed={mode === "guided"}
                 className={cn(
-                  "min-h-10 rounded-md px-3 text-sm",
+                  "min-h-10 border-b-2 px-3 text-sm transition-colors",
                   mode === "guided" ? "bg-accent text-accent-fg" : "text-muted hover:text-fg",
                 )}
                 onClick={selectGuidedMode}
@@ -199,7 +205,7 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
                 type="button"
                 aria-pressed={mode === "outline"}
                 className={cn(
-                  "min-h-10 rounded-md px-3 text-sm",
+                  "min-h-10 border-b-2 px-3 text-sm transition-colors",
                   mode === "outline" ? "bg-accent text-accent-fg" : "text-muted hover:text-fg",
                 )}
                 onClick={() => setMode("outline")}
@@ -225,15 +231,15 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
 
       <section className="min-w-0">
         {mode === "guided" ? (
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/25 bg-accent/5 px-4 py-3">
+          <div className="space-y-0">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-accent/30 bg-accent/5 px-4 py-4">
               <div>
                 <p className="text-xs font-medium tracking-[0.14em] text-accent uppercase">
                   Continuous guided lesson
                 </p>
                 <p className="mt-1 text-sm text-muted">
-                  Every topic is already loaded below. Scroll naturally, use the sidebar to jump,
-                  or use the buttons as shortcuts.
+                  Every topic is already loaded below. Scroll naturally, use the sidebar to jump, or
+                  use the buttons as shortcuts.
                 </p>
               </div>
               <Badge variant="outline">{topics.length} sections to explore</Badge>
@@ -254,15 +260,15 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
         )}
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-warn/30 bg-warn/5 p-5">
+      <section className="grid gap-x-10 gap-y-6 border-y border-border py-8 md:grid-cols-2">
+        <div className="border-l-2 border-warn/60 pl-4">
           <p className="text-xs font-medium tracking-[0.14em] text-warn uppercase">
             Misconception check
           </p>
           <h3 className="font-display mt-2 text-xl">Catch the tempting wrong idea</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted">{guide.commonMistake}</p>
         </div>
-        <div className="rounded-2xl border border-border bg-surface p-5">
+        <div className="border-l-2 border-border pl-4">
           <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">
             Visual checkpoint
           </p>
@@ -336,9 +342,9 @@ export function ChapterGuide({ meta, content, guide, heroFig, official }: Chapte
 
 function InfoCard({ label, text }: { label: string; text: string }) {
   return (
-    <div className="bg-raised/70 p-4 md:p-5">
+    <div className="py-5 md:border-r md:border-border md:px-5 md:first:pl-0 md:last:border-r-0">
       <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">{label}</p>
-      <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
+      <p className="mt-2 max-w-[34rem] text-sm leading-relaxed text-muted">{text}</p>
     </div>
   );
 }
@@ -408,8 +414,8 @@ function TeachingTopicBlock({
   return (
     <article
       className={cn(
-        "rounded-3xl border border-border bg-surface p-6 transition-colors md:p-9",
-        isFocused && "border-accent/60",
+        "border-t border-border py-10 transition-colors md:py-14",
+        isFocused && "border-l-2 border-accent/70 pl-4 md:pl-6",
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -420,9 +426,9 @@ function TeachingTopicBlock({
           <Sparkles className="size-3.5" /> Learn → use → retrieve
         </span>
       </div>
-      <h3 className="font-display mt-5 text-2xl md:text-3xl">{topic.title}</h3>
+      <h3 className="font-display mt-5 max-w-3xl text-3xl md:text-4xl">{topic.title}</h3>
 
-      <div className="mt-4 rounded-xl border border-accent/25 bg-accent/5 p-4">
+      <div className="mt-5 max-w-3xl border-l-2 border-accent/50 bg-accent/5 px-4 py-4">
         <p className="text-xs font-medium tracking-[0.14em] text-accent uppercase">
           Why this matters
         </p>
@@ -431,7 +437,7 @@ function TeachingTopicBlock({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
+      <div className="mt-7 grid max-w-4xl gap-8 md:grid-cols-2">
         <TopicPanel label="Start with the picture">
           <Prose text={topic.intuition} />
         </TopicPanel>
@@ -441,7 +447,7 @@ function TeachingTopicBlock({
       </div>
 
       {topic.mechanism && (
-        <section className="mt-5 rounded-xl border border-border bg-raised/45 p-4">
+        <section className="mt-7 max-w-4xl border-y border-border py-5">
           <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">
             What causes what
           </p>
@@ -462,7 +468,7 @@ function TeachingTopicBlock({
             {topic.equations.map((equation) => (
               <div
                 key={`${equation.name}-${equation.latex}`}
-                className="rounded-xl border border-border bg-raised/45 p-4"
+                className="border-l border-border py-3 pl-4"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="font-medium text-fg">{equation.name}</p>
@@ -481,7 +487,7 @@ function TeachingTopicBlock({
       )}
 
       {topic.keyPoints.length > 0 && (
-        <section className="mt-5 rounded-xl border border-border bg-surface p-4">
+        <section className="mt-7 max-w-4xl border-y border-border py-5">
           <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">
             Keep these distinctions
           </p>
@@ -496,7 +502,7 @@ function TeachingTopicBlock({
         </section>
       )}
 
-      <section className="mt-5 rounded-xl border border-border bg-raised/45 p-4">
+      <section className="mt-7 max-w-4xl border-y border-border py-5">
         <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">
           A reliable method
         </p>
@@ -504,9 +510,9 @@ function TeachingTopicBlock({
           {topic.method.map((item, methodIndex) => (
             <li
               key={item}
-              className="flex gap-3 rounded-lg border border-border bg-surface p-3 text-sm text-muted"
+              className="flex gap-3 border-l border-border py-2 pl-3 text-sm text-muted"
             >
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent/15 font-mono text-xs text-accent">
+              <span className="grid size-6 shrink-0 place-items-center rounded-md bg-accent/15 font-mono text-xs text-accent">
                 {methodIndex + 1}
               </span>
               <span className="leading-relaxed">{item}</span>
@@ -530,11 +536,11 @@ function TeachingTopicBlock({
       {topic.workedExample && <WorkedExampleBlock example={topic.workedExample} />}
 
       {topic.reference && (
-        <details open className="mt-5 rounded-xl border border-border bg-surface">
+        <details open className="mt-7 max-w-4xl border-y border-border">
           <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-fg">
             Full lesson note · derivation, exceptions, and exam boundary
           </summary>
-          <div className="space-y-4 border-t border-border p-4">
+          <div className="space-y-4 border-t border-border py-5">
             <Prose text={topic.reference.text} />
             {topic.reference.bullets && (
               <ul className="space-y-2 text-sm text-muted">
@@ -573,7 +579,7 @@ function TeachingTopicBlock({
               </div>
             )}
             {topic.reference.callout && (
-              <div className="rounded-lg border border-warn/30 bg-warn/5 p-3 text-sm text-muted">
+              <div className="border-l-2 border-warn/60 bg-warn/5 p-3 text-sm text-muted">
                 <span className="font-medium text-fg">Exam note:</span>{" "}
                 <Prose text={topic.reference.callout} compact />
               </div>
@@ -582,7 +588,7 @@ function TeachingTopicBlock({
         </details>
       )}
 
-      <section className="mt-5 rounded-xl border border-warn/30 bg-warn/5 p-4">
+      <section className="mt-7 max-w-4xl border-l-2 border-warn/60 bg-warn/5 p-4">
         <p className="text-xs font-medium tracking-[0.14em] text-warn uppercase">
           Misconception repair
         </p>
@@ -612,17 +618,17 @@ function TeachingTopicBlock({
       )}
 
       {topic.practice && (
-        <details className="rounded-xl border border-border bg-surface">
+        <details className="max-w-4xl border-y border-border">
           <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-fg">
             Try a small transfer before moving on
           </summary>
-          <div className="border-t border-border p-4 text-sm text-muted">
+          <div className="border-t border-border py-4 text-sm text-muted">
             <Prose text={topic.practice.prompt} />
-            <details className="mt-3 rounded-lg border border-border bg-raised/45">
+            <details className="mt-3 border-l border-border pl-3">
               <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-subtle uppercase">
                 Show a model answer
               </summary>
-              <div className="border-t border-border p-3">
+              <div className="border-t border-border py-3">
                 <Prose text={topic.practice.answer} />
                 <p className="mt-2 text-xs leading-relaxed text-subtle">
                   {topic.practice.explanation}

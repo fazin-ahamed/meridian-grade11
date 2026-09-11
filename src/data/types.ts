@@ -54,6 +54,7 @@ export type MasterySection = {
   title: string;
   body: string;
   bullets?: string[];
+  diagram?: string;
 };
 
 export type MasteryModule = {
