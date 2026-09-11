@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "node scripts/with-app-env.mjs vite dev --host 0.0.0.0 --port 8080",
-    "build": "node scripts/with-app-env.mjs vite build && npm run db:migrate",
-    "build:pages": "node scripts/with-app-env.mjs vite build && node scripts/prepare-github-pages.mjs",
+    "build": "node scripts/with-app-env.mjs vite build && node scripts/patch-tanstack-manifest.mjs && npm run db:migrate",
+    "build:pages": "node scripts/with-app-env.mjs vite build && node scripts/patch-tanstack-manifest.mjs && node scripts/prepare-github-pages.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "build:dev": "node scripts/with-app-env.mjs vite build --mode development",
     "preview": "node scripts/with-app-env.mjs vite preview",
