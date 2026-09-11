@@ -2,6 +2,8 @@ import {
   BookOpen,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleHelp,
   FileQuestion,
   FlaskConical,
@@ -18,7 +20,13 @@ import { Figure } from "@/components/diagrams";
 import { Prose } from "@/components/tex";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ChapterContent, ChapterMeta, TheoryBlock } from "@/data/types";
+import type {
+  ChapterContent,
+  ChapterMeta,
+  MasteryLevel,
+  MasteryModule,
+  TheoryBlock,
+} from "@/data/types";
 import { cn } from "@/lib/utils";
 
 type OfficialSummary = {
@@ -42,7 +50,12 @@ type ReferenceQuestionProps = {
 
 export function ChapterReference({ meta, content, official }: ChapterReferenceProps) {
   const classNotes = content.classNotes ?? [];
-  const totalNotes = classNotes.length + content.theory.length;
+  const masteryModules = content.mastery ?? [];
+  const masteryCount = masteryModules.reduce((total, module) => total + module.questions.length, 0);
+  const totalNotes =
+    classNotes.length +
+    content.theory.length +
+    masteryModules.reduce((total, module) => total + module.sections.length, 0);
   const faqs = [
     {
       question: `What is the central idea of ${meta.title}?`,
@@ -88,10 +101,11 @@ export function ChapterReference({ meta, content, official }: ChapterReferencePr
           </Badge>
         </div>
 
-        <div className="mt-7 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-7 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
           <ReferenceStat icon={Layers3} value={totalNotes} label="concept blocks" />
           <ReferenceStat icon={Lightbulb} value={content.worked.length} label="demonstrations" />
-          <ReferenceStat icon={FileQuestion} value={content.quiz.length} label="option checks" />
+          <ReferenceStat icon={FileQuestion} value={content.quiz.length} label="quick checks" />
+          <ReferenceStat icon={Target} value={masteryCount} label="mastery MCQs" />
           <ReferenceStat icon={ListChecks} value={content.checklist.length} label="mastery cues" />
         </div>
 
@@ -105,14 +119,39 @@ export function ChapterReference({ meta, content, official }: ChapterReferencePr
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <ReferenceAnchor href="#reference-overview" index="01" label="Overview" />
             <ReferenceAnchor href="#reference-notes" index="02" label="Concept notes" />
-            <ReferenceAnchor href="#reference-formulas" index="03" label="Formula shelf" />
-            <ReferenceAnchor href="#reference-demonstrations" index="04" label="Demonstrations" />
-            <ReferenceAnchor href="#reference-checks" index="05" label="Exam checks" />
-            <ReferenceAnchor href="#reference-traps" index="06" label="Traps and tactics" />
-            <ReferenceAnchor href="#reference-recap" index="07" label="Recap and FAQs" />
+            {masteryModules.length > 0 && (
+              <ReferenceAnchor href="#reference-mastery" index="03" label="Mastery ladder" />
+            )}
+            <ReferenceAnchor
+              href="#reference-formulas"
+              index={masteryModules.length ? "04" : "03"}
+              label="Formula shelf"
+            />
+            <ReferenceAnchor
+              href="#reference-demonstrations"
+              index={masteryModules.length ? "05" : "04"}
+              label="Demonstrations"
+            />
+            <ReferenceAnchor
+              href="#reference-checks"
+              index={masteryModules.length ? "06" : "05"}
+              label="Exam checks"
+            />
+            <ReferenceAnchor
+              href="#reference-traps"
+              index={masteryModules.length ? "07" : "06"}
+              label="Traps and tactics"
+            />
+            <ReferenceAnchor
+              href="#reference-recap"
+              index={masteryModules.length ? "08" : "07"}
+              label="Recap and FAQs"
+            />
           </div>
         </nav>
       </section>
+
+      {masteryModules.length > 0 && <MasteryLadder modules={masteryModules} />}
 
       <section
         id="reference-overview"
@@ -434,6 +473,274 @@ function SectionHeading({
       <h2 className="font-display mt-2 text-2xl md:text-3xl">{title}</h2>
       <p className="mt-3 text-sm leading-relaxed text-muted">{description}</p>
     </div>
+  );
+}
+
+function MasteryLadder({ modules }: { modules: MasteryModule[] }) {
+  const [moduleId, setModuleId] = useState(modules[0]?.id ?? "");
+  const [level, setLevel] = useState<MasteryLevel | "all">("all");
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [picked, setPicked] = useState<number | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const activeModule = modules.find((module) => module.id === moduleId) ?? modules[0];
+  const questions =
+    activeModule?.questions.filter((question) => level === "all" || question.level === level) ?? [];
+  const question = questions[questionIndex];
+
+  const chooseModule = (nextId: string) => {
+    setModuleId(nextId);
+    setLevel("all");
+    setQuestionIndex(0);
+    setPicked(null);
+    setRevealed(false);
+  };
+
+  const chooseLevel = (nextLevel: MasteryLevel | "all") => {
+    setLevel(nextLevel);
+    setQuestionIndex(0);
+    setPicked(null);
+    setRevealed(false);
+  };
+
+  const moveQuestion = (direction: -1 | 1) => {
+    setQuestionIndex((current) => Math.min(Math.max(current + direction, 0), questions.length - 1));
+    setPicked(null);
+    setRevealed(false);
+  };
+
+  if (!activeModule) return null;
+
+  return (
+    <section
+      id="reference-mastery"
+      className="scroll-mt-8 rounded-3xl border border-border bg-surface p-6 md:p-8"
+    >
+      <SectionHeading
+        eyebrow="03 · Mastery ladder"
+        title="Read the idea, see the archetype, then choose an option"
+        description="This layer follows the attached mastery-course structure. Start with the section map, close the explanation in your head, and move through L1 foundation, L2 standard, L3 JEE-style traps, and L4 synthesis."
+      />
+
+      <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Mastery modules">
+        {modules.map((module) => (
+          <button
+            key={module.id}
+            type="button"
+            role="tab"
+            aria-selected={module.id === activeModule.id}
+            onClick={() => chooseModule(module.id)}
+            className={cn(
+              "rounded-xl border px-3 py-2 text-left text-sm transition-colors",
+              module.id === activeModule.id
+                ? "border-accent bg-accent/10 text-fg"
+                : "border-border bg-raised/35 text-muted hover:bg-raised hover:text-fg",
+            )}
+          >
+            <span className="block font-medium">{module.title}</span>
+            <span className="mt-1 block text-xs text-subtle">
+              {module.sections.length} sections · {module.questions.length} checks
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/5 p-5">
+        <p className="text-xs font-medium tracking-[0.14em] text-accent uppercase">
+          {activeModule.title}
+        </p>
+        <div className="mt-2 text-sm leading-relaxed text-muted">
+          <Prose text={activeModule.summary} />
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-3 lg:grid-cols-2">
+        {activeModule.sections.map((section, index) => (
+          <article
+            key={section.id}
+            className="rounded-2xl border border-border bg-raised/35 p-4 md:p-5"
+          >
+            <div className="flex items-start gap-3">
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-surface font-mono text-xs text-subtle">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <h3 className="font-medium leading-relaxed text-fg">{section.title}</h3>
+            </div>
+            <div className="mt-4 text-sm leading-relaxed text-muted">
+              <Prose text={section.body} />
+            </div>
+            {section.bullets && (
+              <ul className="mt-4 space-y-2 text-sm leading-relaxed text-muted">
+                {section.bullets.map((bullet) => (
+                  <li key={bullet} className="flex gap-3">
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" />
+                    <Prose text={bullet} compact />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+        ))}
+      </div>
+
+      <div className="mt-8 border-t border-border pt-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium tracking-[0.14em] text-subtle uppercase">
+              Interactive mastery quiz
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              Choose the model before revealing the explanation. Every option is designed to expose
+              a common reasoning error.
+            </p>
+          </div>
+          <div className="text-right text-xs text-subtle">
+            <p>
+              {questions.length
+                ? "Question " + (questionIndex + 1) + " of " + questions.length
+                : "No checks"}
+            </p>
+            <p className="mt-1">
+              L1 {activeModule.questions.filter((item) => item.level === "L1").length} · L2{" "}
+              {activeModule.questions.filter((item) => item.level === "L2").length} · L3{" "}
+              {activeModule.questions.filter((item) => item.level === "L3").length} · L4{" "}
+              {activeModule.questions.filter((item) => item.level === "L4").length}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Mastery difficulty">
+          {(["all", "L1", "L2", "L3", "L4"] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              aria-pressed={level === item}
+              onClick={() => chooseLevel(item)}
+              className={cn(
+                "min-h-9 rounded-lg border px-3 text-xs font-medium transition-colors",
+                level === item
+                  ? "border-accent bg-accent text-accent-fg"
+                  : "border-border bg-raised/35 text-muted hover:bg-raised hover:text-fg",
+              )}
+            >
+              {item === "all"
+                ? "All levels"
+                : item +
+                  " · " +
+                  (item === "L1"
+                    ? "foundation"
+                    : item === "L2"
+                      ? "standard"
+                      : item === "L3"
+                        ? "JEE trap"
+                        : "synthesis")}
+            </button>
+          ))}
+        </div>
+
+        {question ? (
+          <article className="mt-5 rounded-2xl border border-border bg-raised/35 p-4 md:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="grid size-8 place-items-center rounded-lg border border-border bg-surface font-mono text-xs text-subtle">
+                  Q{questionIndex + 1}
+                </span>
+                <Badge variant="outline">{question.level}</Badge>
+              </div>
+              <span className="text-xs text-subtle">option-based check</span>
+            </div>
+            <div className="mt-4 text-sm leading-relaxed text-fg">
+              <Prose text={question.prompt} />
+            </div>
+            <div className="mt-4 grid gap-2">
+              {question.choices.map((choice, choiceIndex) => {
+                const chosen = picked === choiceIndex;
+                const correct = revealed && choiceIndex === question.answer;
+                const wrong = revealed && chosen && choiceIndex !== question.answer;
+                return (
+                  <button
+                    key={choice}
+                    type="button"
+                    aria-pressed={chosen}
+                    onClick={() => {
+                      setPicked(choiceIndex);
+                      setRevealed(false);
+                    }}
+                    className={cn(
+                      "flex min-h-11 items-start gap-3 rounded-xl border px-3 py-2 text-left text-sm transition-colors",
+                      correct
+                        ? "border-ok/50 bg-ok/10 text-fg"
+                        : wrong
+                          ? "border-danger/50 bg-danger/10 text-fg"
+                          : chosen
+                            ? "border-accent bg-surface text-fg"
+                            : "border-border bg-surface text-muted hover:bg-raised hover:text-fg",
+                    )}
+                  >
+                    <span className="grid size-6 shrink-0 place-items-center rounded-md border border-border font-mono text-xs text-subtle">
+                      {String.fromCharCode(65 + choiceIndex)}
+                    </span>
+                    <Prose text={choice} compact />
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setRevealed(true)}
+                disabled={picked == null}
+              >
+                Check this choice
+              </Button>
+              {revealed && (
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    picked === question.answer ? "text-ok" : "text-danger",
+                  )}
+                >
+                  {picked === question.answer
+                    ? "Correct — the model is holding."
+                    : "Not yet — compare the marked option."}
+                </span>
+              )}
+            </div>
+            {revealed && (
+              <div className="mt-4 rounded-xl border border-border bg-surface p-4 text-sm leading-relaxed text-muted">
+                <p className="font-medium text-fg">Why</p>
+                <div className="mt-2">
+                  <Prose text={question.explanation} />
+                </div>
+              </div>
+            )}
+            <div className="mt-5 flex flex-wrap justify-between gap-2 border-t border-border pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => moveQuestion(-1)}
+                disabled={questionIndex === 0}
+              >
+                <ChevronLeft className="size-4" /> Previous
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => moveQuestion(1)}
+                disabled={questionIndex === questions.length - 1}
+              >
+                {questionIndex === questions.length - 1 ? "Module complete" : "Next question"}{" "}
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          </article>
+        ) : (
+          <EmptyReference text="No questions are available at this level yet. Try another difficulty filter." />
+        )}
+      </div>
+    </section>
   );
 }
 

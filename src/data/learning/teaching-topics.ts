@@ -949,8 +949,21 @@ const TOPIC_BANK: Record<string, TeachingTopic[]> = {
   "phy-solids": PHYSICS_SOLIDS_TOPICS,
 };
 
+function masteryBlocksFor(content: ChapterContent): TheoryBlock[] {
+  return (content.mastery ?? [])
+    .filter((module) => module.includeInGuide !== false)
+    .flatMap((module) =>
+      module.sections.map((section) => ({
+        id: `mastery-${module.id}-${section.id}`,
+        heading: section.title,
+        body: section.body,
+        bullets: section.bullets,
+      })),
+    );
+}
+
 function fallbackBlocks(meta: ChapterMeta, content: ChapterContent): TheoryBlock[] {
-  const notes = content.classNotes?.length ? content.classNotes : content.theory;
+  const notes = [...(content.classNotes ?? []), ...content.theory];
   if (notes.length) return notes;
   return [
     {
@@ -967,6 +980,11 @@ export function teachingTopicsFor(
   content: ChapterContent,
   guide: TeachingContext,
 ): TeachingTopic[] {
+  const masteryBlocks = masteryBlocksFor(content);
+  if (masteryBlocks.length) {
+    return masteryBlocks.map((block, index) => scaffoldTopic(meta, content, guide, block, index));
+  }
+
   const explicit = TOPIC_BANK[meta.id];
   if (explicit) {
     return explicit.map((item, index) => ({

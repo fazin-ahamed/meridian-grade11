@@ -432,9 +432,9 @@ function TeachingTopicBlock({
       {topic.workedExample && <WorkedExampleBlock example={topic.workedExample} />}
 
       {topic.reference && (
-        <details className="mt-5 rounded-xl border border-border bg-surface">
+        <details open className="mt-5 rounded-xl border border-border bg-surface">
           <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-fg">
-            Open derivation, exceptions, and the complete note
+            Full lesson note · derivation, exceptions, and exam boundary
           </summary>
           <div className="space-y-4 border-t border-border p-4">
             <Prose text={topic.reference.text} />

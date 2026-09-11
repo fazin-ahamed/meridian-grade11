@@ -9,6 +9,7 @@ import { OFFICIAL_DEPTH } from "./official-depth";
 import { PHYSICS_CONTENT } from "./physics";
 import { PHYSICS_DEPTH } from "./physics-depth";
 import { PHYSICS_EXPERIMENTAL, PHYSICS_MASTERY } from "./physics-mastery";
+import { PHYSICS_MASTERY_COURSE } from "./physics-mastery-course";
 import { PHYSICS_REST } from "./physics-rest";
 import { PHYSICS_XII } from "./physics-xii";
 import { CLASSROOM_NOTES } from "./classroom-notes";
@@ -31,6 +32,7 @@ const DEPTH_LAYERS: Record<string, Partial<ChapterContent>>[] = [
   MATHS_MASTERY,
   OFFICIAL_DEPTH,
   CLASSROOM_NOTES,
+  PHYSICS_MASTERY_COURSE,
 ];
 
 function merge(base: ChapterContent, extra: Partial<ChapterContent>): ChapterContent {
@@ -46,6 +48,7 @@ function merge(base: ChapterContent, extra: Partial<ChapterContent>): ChapterCon
     extras: [...base.extras, ...(extra.extras ?? [])],
     checklist: [...base.checklist, ...(extra.checklist ?? [])],
     classNotes: [...(base.classNotes ?? []), ...(extra.classNotes ?? [])],
+    mastery: [...(base.mastery ?? []), ...(extra.mastery ?? [])],
   };
 }
 
@@ -64,6 +67,7 @@ function stackedDepth(id: string): Partial<ChapterContent> | undefined {
     extras: [...(acc.extras ?? []), ...(extra.extras ?? [])],
     checklist: [...(acc.checklist ?? []), ...(extra.checklist ?? [])],
     classNotes: [...(acc.classNotes ?? []), ...(extra.classNotes ?? [])],
+    mastery: [...(acc.mastery ?? []), ...(extra.mastery ?? [])],
   }));
 }
 
@@ -83,10 +87,19 @@ function fallback(meta: ChapterMeta): ChapterContent {
         body: meta.summary,
         bullets: meta.objectives,
         callout: meta.jeeMain
-          ? { kind: "main", text: "Tagged for JEE Main. Treat NCERT as the floor, not the ceiling." }
+          ? {
+              kind: "main",
+              text: "Tagged for JEE Main. Treat NCERT as the floor, not the ceiling.",
+            }
           : meta.jeeAdvanced
-            ? { kind: "advanced", text: "Main-deleted or Advanced-heavy. Skip on a 30-day Main salvage; required for IIT." }
-            : { kind: "board", text: "Boards-focused. Write the NCERT derivation, do not only solve JEE numericals." },
+            ? {
+                kind: "advanced",
+                text: "Main-deleted or Advanced-heavy. Skip on a 30-day Main salvage; required for IIT.",
+              }
+            : {
+                kind: "board",
+                text: "Boards-focused. Write the NCERT derivation, do not only solve JEE numericals.",
+              },
       },
       {
         id: "how",
@@ -185,7 +198,12 @@ export function allFormulas() {
   return CATALOG.flatMap((meta) => {
     const c = getContent(meta.id);
     if (!c) return [];
-    return c.formulas.map((f) => ({ ...f, chapterId: meta.id, chapter: meta.title, subject: meta.subject }));
+    return c.formulas.map((f) => ({
+      ...f,
+      chapterId: meta.id,
+      chapter: meta.title,
+      subject: meta.subject,
+    }));
   });
 }
 
@@ -193,6 +211,11 @@ export function allQuizzes() {
   return CATALOG.flatMap((meta) => {
     const c = getContent(meta.id);
     if (!c) return [];
-    return c.quiz.map((q) => ({ ...q, chapterId: meta.id, chapter: meta.title, subject: meta.subject }));
+    return c.quiz.map((q) => ({
+      ...q,
+      chapterId: meta.id,
+      chapter: meta.title,
+      subject: meta.subject,
+    }));
   });
 }

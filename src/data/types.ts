@@ -33,6 +33,39 @@ export type QuizItem = {
   difficulty?: 1 | 2 | 3 | 4 | 5;
 };
 
+export type MasteryLevel = "L1" | "L2" | "L3" | "L4";
+
+/**
+ * A compact, option-based check from the deep chapter course.
+ * L1 = foundation, L2 = standard, L3 = JEE-style trap, L4 = synthesis.
+ */
+export type MasteryQuestion = {
+  id: string;
+  section: string;
+  level: MasteryLevel;
+  prompt: string;
+  choices: string[];
+  answer: number;
+  explanation: string;
+};
+
+export type MasterySection = {
+  id: string;
+  title: string;
+  body: string;
+  bullets?: string[];
+};
+
+export type MasteryModule = {
+  id: string;
+  title: string;
+  summary: string;
+  sections: MasterySection[];
+  questions: MasteryQuestion[];
+  /** Final mixed modules can live in the reference layer without adding a duplicate guide step. */
+  includeInGuide?: boolean;
+};
+
 export type TheoryBlock = {
   id: string;
   heading: string;
@@ -57,6 +90,8 @@ export type ChapterContent = {
   starter?: { heading: string; body: string; bullets?: string[] };
   /** Definition-first class notes (NCERT / classroom style). */
   classNotes?: TheoryBlock[];
+  /** Deep course layer: syllabus map, full explanations, and levelled MCQs. */
+  mastery?: MasteryModule[];
 };
 
 export type PaperKind = "mcq" | "numerical" | "long";
